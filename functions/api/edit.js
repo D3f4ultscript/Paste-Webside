@@ -1,11 +1,4 @@
-const PASS='Luna-132'
-
-function okAuth(req){
-return (req.headers.get('X-Password')||'')===PASS
-}
-
 export async function onRequestPost(context){
-if(!okAuth(context.request)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
 try{
 const {id,name,code}=await context.request.json()
 if(!id||!name||!code) return new Response(JSON.stringify({error:'Missing fields'}),{status:400,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})

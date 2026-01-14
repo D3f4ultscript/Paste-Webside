@@ -9,6 +9,7 @@
 body{font-family:'Segoe UI',monospace;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;padding:40px 20px;min-height:100vh}
 .container{max-width:900px;margin:0 auto}
 h1{margin-bottom:22px;font-size:34px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.info-box{background:rgba(0,102,255,0.15);border:1px solid rgba(0,102,255,0.3);padding:14px;border-radius:8px;margin-bottom:20px;font-size:13px;color:#7fd5ff}
 .panel{background:rgba(42,42,42,0.6);padding:22px;border-radius:12px;margin-bottom:28px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 input,textarea{width:100%;padding:14px;margin:10px 0;background:rgba(20,20,20,0.85);border:1px solid rgba(255,255,255,0.12);color:#fff;font-family:monospace;font-size:14px;border-radius:10px;transition:0.2s}
 input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.25)}
@@ -41,16 +42,22 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 .modal-actions{display:flex;gap:10px;margin-top:12px}
 .modal-actions .btn{flex:1}
 .loading{padding:18px;text-align:center;color:#7fd5ff}
+code{background:#0a0a0a;padding:3px 6px;border-radius:4px;color:#00ff88;font-size:12px}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Script Paste</h1>
 
+<div class="info-box">
+🔐 <strong>Roblox Token:</strong> <code>?token=roblox_secret_abc123xyz</code><br>
+Use: <code>loadstring(game:HttpGet("https://DEINE-DOMAIN.pages.dev/raw/ID?token=roblox_secret_abc123xyz"))()</code>
+</div>
+
 <div class="panel">
 <input type="text" id="name" placeholder="Script Name">
 <textarea id="code" placeholder="Paste your script here..."></textarea>
-<input type="text" id="customId" placeholder="Custom ID (optional: banana)">
+<input type="text" id="customId" placeholder="Custom ID (optional)">
 <div class="row">
 <button class="btn" id="uploadBtn" onclick="upload()">Upload</button>
 <button class="btn gray" onclick="clearForm()">Clear</button>
@@ -58,17 +65,6 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 </div>
 
 <div class="list" id="list"></div>
-</div>
-
-<div class="modal" id="pwModal">
-<div class="modal-box">
-<h2 id="pwTitle">Password</h2>
-<input type="password" id="pwInput" placeholder="Enter password" autocomplete="off" onkeypress="if(event.key==='Enter')pwSubmit()">
-<div class="modal-actions">
-<button class="btn" onclick="pwSubmit()">OK</button>
-<button class="btn gray" onclick="pwCancel()">Cancel</button>
-</div>
-</div>
 </div>
 
 <div class="modal" id="editModal">
@@ -89,22 +85,16 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 <div style="color:#cfcfcf;margin-top:8px">Really delete this script?</div>
 <div class="modal-actions">
 <button class="btn gray" onclick="closeConfirm()">Cancel</button>
-<button class="btn" style="background:linear-gradient(135deg,#ff3333,#c20000)" id="deleteBtn" onclick="confirmDelete()">Delete</button>
+<button class="btn" style="background:linear-gradient(135deg,#ff3333,#c20000)" onclick="confirmDelete()">Delete</button>
 </div>
 </div>
 </div>
 
 <script>
-const PASS='Luna-132'
-
-let sessionPw=''
-let pwResolve=null
-let pwReject=null
-
 let editingId=null
 let deleteId=null
-let codeCache={}
 let busy=false
+const TOKEN='roblox_secret_abc123xyz'
 
 function esc(s){
 const d=document.createElement('div')
@@ -118,50 +108,6 @@ document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 
 document.addEventListener('click',()=>closeAllDropdowns())
 
-function openPw(title){
-document.getElementById('pwTitle').textContent=title||'Password'
-document.getElementById('pwInput').value=''
-document.getElementById('pwModal').classList.add('show')
-setTimeout(()=>document.getElementById('pwInput').focus(),50)
-return new Promise((resolve,reject)=>{
-pwResolve=resolve
-pwReject=reject
-})
-}
-
-function pwSubmit(){
-const v=document.getElementById('pwInput').value
-if(v!==PASS) return
-document.getElementById('pwModal').classList.remove('show')
-const r=pwResolve
-pwResolve=pwReject=null
-r(v)
-}
-
-function pwCancel(){
-document.getElementById('pwModal').classList.remove('show')
-const r=pwReject
-pwResolve=pwReject=null
-if(r) r(new Error('cancel'))
-}
-
-async function ensureSessionPassword(){
-const pw=await openPw('Enter password to open this page')
-sessionPw=pw
-}
-
-async function askActionPassword(title){
-return await openPw(title||'Enter password')
-}
-
-async function apiFetch(path,opts,pw){
-const o=opts||{}
-o.headers=o.headers||{}
-o.headers['X-Password']=pw
-o.cache='no-store'
-return await fetch(path,o)
-}
-
 function clearForm(){
 document.getElementById('name').value=''
 document.getElementById('code').value=''
@@ -171,13 +117,13 @@ document.getElementById('customId').value=''
 function toggleMenu(id,event){
 event.stopPropagation()
 const dd=document.getElementById('menu-'+id)
-document.querySelectorAll('.dropdown').forEach(x=>{ if(x!==dd) x.classList.remove('show') })
+document.querySelectorAll('.dropdown').forEach(x=>{if(x!==dd)x.classList.remove('show')})
 dd.classList.toggle('show')
 }
 
 async function fetchList(){
-const res=await apiFetch('/api/list?t='+Date.now(),{method:'GET'},sessionPw)
-if(res.status===401) throw new Error('unauthorized')
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
+if(res.status===401){location.reload();throw new Error('unauthorized')}
 return await res.json()
 }
 
@@ -201,43 +147,41 @@ document.getElementById('list').innerHTML=items.map(s=>`
 </div>
 <div class="small">${new Date(s.date||0).toLocaleString('de-DE')} • ID: ${esc(s.id)}</div>
 <div class="links">
-<a onclick="viewRaw('${s.id}',event)">View raw</a>
-<a onclick="copyLoadstring('${s.id}',event)">Copy loadstring</a>
+<a onclick="copyLoadstring('${s.id}',event)">Copy Loadstring</a>
 </div>
 </div>
 `).join('')
 }catch(e){
-document.getElementById('list').innerHTML='<div class="loading" style="color:#ff6666">Failed to load</div>'
+document.getElementById('list').innerHTML='<div class="loading" style="color:#ff6666">Failed</div>'
 }
 }
 
 async function waitForKV(id,shouldExist){
-const max=15
-for(let i=0;i<max;i++){
+for(let i=0;i<15;i++){
 await new Promise(r=>setTimeout(r,1000))
 try{
 const items=await fetchList()
 const ex=items.some(x=>x.id===id)
-if(shouldExist && ex) return true
-if(!shouldExist && !ex) return true
+if(shouldExist&&ex)return true
+if(!shouldExist&&!ex)return true
 }catch(e){}
 }
 return false
 }
 
 async function upload(){
-if(busy) return
+if(busy)return
 const name=document.getElementById('name').value.trim()
 const code=document.getElementById('code').value.trim()
 const customId=document.getElementById('customId').value.trim()
-if(!name||!code) return
+if(!name||!code)return
 try{
 busy=true
 document.getElementById('uploadBtn').disabled=true
-const pw=await askActionPassword('Enter password to upload')
-const res=await apiFetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})},pw)
+const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId}),cache:'no-store'})
+if(res.status===401){location.reload();return}
 const data=await res.json()
-if(res.status!==200){busy=false;document.getElementById('uploadBtn').disabled=false;return}
+if(res.status!==200)return
 clearForm()
 await waitForKV(data.id,true)
 await loadList()
@@ -250,19 +194,17 @@ document.getElementById('uploadBtn').disabled=false
 async function openEdit(id){
 closeAllDropdowns()
 try{
-const pw=await askActionPassword('Enter password to edit')
-const res=await apiFetch('/api/get/'+id,{method:'GET'},pw)
+const res=await fetch('/api/get/'+id,{cache:'no-store'})
+if(res.status===401){location.reload();return}
 const data=await res.json()
-if(res.status!==200) return
+if(res.status!==200)return
 editingId=id
-document.getElementById('editName').value=''
-document.getElementById('editCode').value=data.code||''
-document.getElementById('editModal').classList.add('show')
-
 const items=await fetchList()
 const item=items.find(x=>x.id===id)
 document.getElementById('editName').value=item?.name||'Unnamed'
-} catch(e){}
+document.getElementById('editCode').value=data.code||''
+document.getElementById('editModal').classList.add('show')
+}catch(e){}
 }
 
 function closeEdit(){
@@ -271,18 +213,18 @@ editingId=null
 }
 
 async function saveEdit(){
-if(!editingId) return
+if(!editingId)return
 const name=document.getElementById('editName').value.trim()
 const code=document.getElementById('editCode').value.trim()
-if(!name||!code) return
+if(!name||!code)return
 try{
-const pw=await askActionPassword('Enter password to save edit')
-const res=await apiFetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})},pw)
-if(res.status!==200) return
+const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code}),cache:'no-store'})
+if(res.status===401){location.reload();return}
+if(res.status!==200)return
 closeEdit()
 await waitForKV(editingId,true)
 await loadList()
-} catch(e){}
+}catch(e){}
 }
 
 function openDelete(id){
@@ -297,46 +239,26 @@ deleteId=null
 }
 
 async function confirmDelete(){
-if(!deleteId) return
+if(!deleteId)return
 try{
-const pw=await askActionPassword('Enter password to delete')
-const res=await apiFetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})},pw)
-if(res.status!==200) return
+const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId}),cache:'no-store'})
+if(res.status===401){location.reload();return}
+if(res.status!==200)return
 const id=deleteId
 closeConfirm()
 await waitForKV(id,false)
 await loadList()
-} catch(e){}
+}catch(e){}
 }
 
 function copyLoadstring(id,event){
 event.preventDefault()
-navigator.clipboard.writeText(`loadstring(game:HttpGet("${location.origin}/raw/${id}"))()`)
+const url=`${location.origin}/raw/${id}?token=${TOKEN}`
+navigator.clipboard.writeText(`loadstring(game:HttpGet("${url}"))()`)
 }
 
-async function viewRaw(id,event){
-event.preventDefault()
-try{
-const pw=await askActionPassword('Enter password to view raw')
-const res=await apiFetch('/raw/'+id,{method:'GET'},pw)
-if(res.status!==200) return
-const t=await res.text()
-const w=window.open('about:blank','_blank')
-if(!w) return
-w.document.open()
-w.document.write('<pre style="white-space:pre-wrap;word-break:break-word;background:#0b0b0b;color:#fff;padding:16px;margin:0;font-family:monospace">'+
-t.replace(/[&<>"]/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]))+
-'</pre>')
-w.document.close()
-} catch(e){}
-}
-
-history.replaceState(null,'',location.pathname)
-
-;(async()=>{
-await ensureSessionPassword()
-await loadList()
-})()
+loadList()
+setInterval(loadList,15000)
 </script>
 </body>
 </html>
