@@ -16,6 +16,7 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 .btn-group{display:flex;gap:10px}
 button{padding:12px 24px;background:linear-gradient(135deg,#0066ff,#0052cc);color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:8px;font-weight:600;transition:0.3s;flex:1}
 button:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,102,255,0.4)}
+button:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 button.clear{background:linear-gradient(135deg,#333,#222)}
 button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 .list{margin-top:20px}
@@ -43,6 +44,9 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 .confirm-modal .modal-content{max-width:400px;text-align:center}
 .confirm-modal p{margin:20px 0;font-size:16px;color:#ccc}
 .hint{font-size:12px;color:#888;margin:-8px 0 12px 0}
+.loading{text-align:center;padding:20px;color:#0066ff;font-size:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #333;border-top-color:#0066ff;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px}
 </style>
 </head>
 <body>
@@ -54,7 +58,7 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <input type="text" id="customId" placeholder="Custom ID (optional - leave empty for random)">
 <div class="hint">💡 Custom ID erlaubt: a-z, A-Z, 0-9, _, -</div>
 <div class="btn-group">
-<button onclick="upload()">📤 Upload</button>
+<button id="uploadBtn" onclick="upload()">📤 Upload</button>
 <button class="clear" onclick="clearForm()">🗑️ Clear</button>
 </div>
 </div>
@@ -78,7 +82,7 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <h2>❌ Delete Script</h2>
 <p>Willst du dieses Script wirklich löschen?</p>
 <div class="modal-buttons">
-<button class="clear" onclick="confirmDelete()">🗑️ Löschen</button>
+<button class="clear" id="deleteBtn" onclick="confirmDelete()">🗑️ Löschen</button>
 <button onclick="closeConfirm()">✖️ Abbrechen</button>
 </div>
 </div>
@@ -87,29 +91,35 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <script>
 let editingId=null
 let deleteId=null
-let localCache=new Map()
-let codeCache=new Map()
-let lastSyncTime=0
+let codeCache={}
+let isLoading=false
 
 async function upload(){
+if(isLoading)return
 const name=document.getElementById('name').value.trim()
 const code=document.getElementById('code').value.trim()
 const customId=document.getElementById('customId').value.trim()
 if(!name||!code)return
+isLoading=true
+document.getElementById('uploadBtn').disabled=true
+document.getElementById('uploadBtn').textContent='⏳ Uploading...'
 try{
 const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
 const data=await res.json()
-if(data.error){alert('❌ Error: '+data.error);return}
-const newItem={id:data.id,name,date:Date.now()}
-localCache.set(data.id,newItem)
-codeCache.set(data.id,code)
-renderList()
+if(data.error){
+alert('❌ Error: '+data.error)
+return
+}
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 document.getElementById('customId').value=''
-setTimeout(()=>syncWithKV(),2000)
+await waitForKV(data.id,true)
 }catch(e){
 alert('❌ Upload failed: '+e.message)
+}finally{
+isLoading=false
+document.getElementById('uploadBtn').disabled=false
+document.getElementById('uploadBtn').textContent='📤 Upload'
 }
 }
 
@@ -132,16 +142,17 @@ dropdown.classList.toggle('show')
 async function openEdit(id,event){
 event.stopPropagation()
 try{
-let code=codeCache.get(id)
+let code=codeCache[id]
 if(!code){
 const res=await fetch('/api/get/'+id,{cache:'no-store'})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 code=data.code
-codeCache.set(id,code)
+codeCache[id]=code
 }
 editingId=id
-const item=localCache.get(id)
+const items=await fetchList()
+const item=items.find(i=>i.id===id)
 document.getElementById('editName').value=item?.name||'Unnamed'
 document.getElementById('editCode').value=code||''
 document.getElementById('editModal').classList.add('show')
@@ -164,16 +175,9 @@ try{
 const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
-const item=localCache.get(editingId)
-if(item){
-item.name=name
-item.date=Date.now()
-localCache.set(editingId,item)
-}
-codeCache.set(editingId,code)
-renderList()
+codeCache[editingId]=code
 closeEdit()
-setTimeout(()=>syncWithKV(),2000)
+await waitForKV(editingId,true)
 }catch(e){
 alert('❌ Edit failed: '+e.message)
 }
@@ -192,17 +196,23 @@ deleteId=null
 }
 
 async function confirmDelete(){
+if(isLoading)return
+isLoading=true
+document.getElementById('deleteBtn').disabled=true
+document.getElementById('deleteBtn').textContent='⏳ Löschen...'
 try{
 const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
-localCache.delete(deleteId)
-codeCache.delete(deleteId)
-renderList()
+delete codeCache[deleteId]
 closeConfirm()
-setTimeout(()=>syncWithKV(),2000)
+await waitForKV(deleteId,false)
 }catch(e){
 alert('❌ Delete failed: '+e.message)
+}finally{
+isLoading=false
+document.getElementById('deleteBtn').disabled=false
+document.getElementById('deleteBtn').textContent='🗑️ Löschen'
 }
 }
 
@@ -216,12 +226,41 @@ function closeAllDropdowns(){
 document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 }
 
-function renderList(){
-if(localCache.size===0){
+async function fetchList(){
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}})
+return await res.json()
+}
+
+async function waitForKV(id,shouldExist){
+const maxAttempts=15
+const delay=1000
+document.getElementById('list').innerHTML='<div class="loading"><span class="spinner"></span>Updating...</div>'
+for(let i=0;i<maxAttempts;i++){
+await new Promise(r=>setTimeout(r,delay))
+try{
+const items=await fetchList()
+const exists=items.some(item=>item.id===id)
+if(shouldExist&&exists){
+await loadList()
+return
+}
+if(!shouldExist&&!exists){
+await loadList()
+return
+}
+}catch(e){}
+}
+await loadList()
+}
+
+async function loadList(){
+try{
+const items=await fetchList()
+if(!Array.isArray(items)||items.length===0){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
 return
 }
-const items=Array.from(localCache.values()).sort((a,b)=>b.date-a.date)
+items.sort((a,b)=>b.date-a.date)
 document.getElementById('list').innerHTML=items.map(s=>`
 <div class="item">
 <div class="item-header">
@@ -239,41 +278,6 @@ document.getElementById('list').innerHTML=items.map(s=>`
 </div>
 </div>
 `).join('')
-}
-
-async function syncWithKV(){
-try{
-const now=Date.now()
-if(now-lastSyncTime<1000)return
-lastSyncTime=now
-const res=await fetch('/api/list?t='+now,{cache:'no-store'})
-const items=await res.json()
-if(Array.isArray(items)){
-const newCache=new Map()
-items.forEach(item=>{
-const existing=localCache.get(item.id)
-if(existing){
-newCache.set(item.id,existing)
-}else{
-newCache.set(item.id,item)
-}
-})
-localCache=newCache
-renderList()
-}
-}catch(e){}
-}
-
-async function loadList(){
-try{
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
-const items=await res.json()
-if(Array.isArray(items)&&items.length>0){
-localCache=new Map(items.map(i=>[i.id,i]))
-renderList()
-}else{
-document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
-}
 }catch(e){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#ff3333;padding:40px">❌ Fehler beim Laden</div>'
 }
@@ -288,7 +292,7 @@ return div.innerHTML
 document.addEventListener('click',()=>closeAllDropdowns())
 
 loadList()
-setInterval(syncWithKV,10000)
+setInterval(loadList,15000)
 </script>
 </body>
 </html>
