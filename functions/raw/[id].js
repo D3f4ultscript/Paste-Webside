@@ -26,18 +26,18 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0b0b0b;border:1px sol
 <div class="box">
 <h1>Access required</h1>
 <p>Enter password to view this raw script.</p>
-<input id="pw" type="password" placeholder="Password" autocomplete="off" autofocus>
+<input id="pw" type="password" placeholder="Password" autocomplete="off" autofocus onkeypress="if(event.key==='Enter')go()">
 <button onclick="go()">Unlock</button>
 <div class="err" id="err">Wrong password.</div>
 <pre id="out" style="display:none"></pre>
 </div>
 <script>
 async function go(){
-const pw=document.getElementById('pw').value
+var pw=document.getElementById('pw').value
 if(!pw) return
-const res=await fetch(location.pathname,{headers:{'X-Password':pw,'Cache-Control':'no-store'}})
+var res=await fetch(location.pathname,{headers:{'X-Password':pw,'Cache-Control':'no-store'}})
 if(res.status!==200){document.getElementById('err').style.display='block';return}
-const t=await res.text()
+var t=await res.text()
 document.getElementById('err').style.display='none'
 document.getElementById('out').style.display='block'
 document.getElementById('out').textContent=t
@@ -53,14 +53,6 @@ try{
 const id=context.params.id
 const code=await context.env.PASTE_DB.get(id,'text')
 if(!code) return new Response('Not found',{status:404,headers:{'Cache-Control':'no-store'}})
-
-const url=new URL(context.request.url)
-const pubToken=(context.env.PUBLIC_RAW_TOKEN||'').trim()
-const token=url.searchParams.get('token')||''
-
-if(pubToken && token===pubToken){
-return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'}})
-}
 
 if(ok(context.request,context.env)){
 return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'}})

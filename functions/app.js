@@ -26,12 +26,16 @@ button:hover{background:#0052cc}
 <div class="err" id="err">Wrong password.</div>
 </div>
 <script>
+function escPwForInjection(s){
+return JSON.stringify(String(s||'')) 
+}
 async function go(){
 var pw=document.getElementById('pw').value
 if(!pw) return
 var res=await fetch('/app',{headers:{'X-Password':pw,'Cache-Control':'no-store'}})
 if(res.status!==200){document.getElementById('err').style.display='block';return}
 var html=await res.text()
+html=html.replace('__SESSION_PW__',escPwForInjection(pw))
 document.open();document.write(html);document.close()
 }
 </script>
@@ -83,6 +87,7 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 .modal-actions{display:flex;gap:10px;margin-top:12px}
 .modal-actions .btn{flex:1}
 .loading{padding:18px;text-align:center;color:#7fd5ff}
+.err{padding:14px;text-align:center;color:#ff7777}
 </style>
 </head>
 <body>
@@ -119,7 +124,7 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 <input type="text" id="editName" placeholder="Script Name">
 <textarea id="editCode" placeholder="Script Code" style="min-height:280px"></textarea>
 <div class="modal-actions">
-<button class="btn" onclick="saveEdit()">Save</button>
+<button class="btn" id="saveBtn" onclick="saveEdit()">Save</button>
 <button class="btn gray" onclick="closeEdit()">Cancel</button>
 </div>
 </div>
@@ -131,17 +136,20 @@ textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
 <div style="color:#cfcfcf;margin-top:8px">Really delete this script?</div>
 <div class="modal-actions">
 <button class="btn gray" onclick="closeConfirm()">Cancel</button>
-<button class="btn" style="background:linear-gradient(135deg,#ff3333,#c20000)" onclick="confirmDelete()">Delete</button>
+<button class="btn" style="background:linear-gradient(135deg,#ff3333,#c20000)" id="deleteBtn" onclick="confirmDelete()">Delete</button>
 </div>
 </div>
 </div>
 
 <script>
+var SESSION_PW=__SESSION_PW__
+
 var pwResolve=null
 var pwReject=null
 var editingId=null
 var deleteId=null
 var busy=false
+var editPw=null
 
 function esc(s){
 var d=document.createElement('div')
@@ -198,8 +206,8 @@ document.querySelectorAll('.dropdown').forEach(function(x){if(x!==dd)x.classList
 dd.classList.toggle('show')
 }
 
-async function fetchList(pw){
-var res=await apiFetch('/api/list?t='+Date.now(),{method:'GET'},pw)
+async function fetchList(){
+var res=await apiFetch('/api/list?t='+Date.now(),{method:'GET'},SESSION_PW)
 if(res.status!==200) throw new Error('unauthorized')
 return await res.json()
 }
@@ -238,13 +246,11 @@ document.getElementById('list').innerHTML=out.join('')
 
 async function loadList(){
 try{
-document.getElementById('list').innerHTML='<div class="loading">Password required to load list...</div>'
-var pw=await openPw('Enter password to view list')
 document.getElementById('list').innerHTML='<div class="loading">Loading...</div>'
-var items=await fetchList(pw)
+var items=await fetchList()
 renderList(items)
 }catch(e){
-document.getElementById('list').innerHTML='<div class="loading" style="color:#ff6666">Wrong password / cancelled</div>'
+document.getElementById('list').innerHTML='<div class="err">Session invalid. Reload the page.</div>'
 }
 }
 
@@ -252,7 +258,9 @@ async function waitForKV(id,shouldExist,pw){
 for(var i=0;i<15;i++){
 await new Promise(function(r){setTimeout(r,1000)})
 try{
-var items=await fetchList(pw)
+var res=await apiFetch('/api/list?t='+Date.now(),{method:'GET'},pw)
+if(res.status!==200) continue
+var items=await res.json()
 var ex=false
 for(var j=0;j<items.length;j++){
 if(items[j].id===id){ex=true;break}
@@ -276,7 +284,7 @@ document.getElementById('uploadBtn').disabled=true
 var pw=await openPw('Enter password to upload')
 var res=await apiFetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,code:code,customId:customId})},pw)
 var data=await res.json()
-if(res.status!==200) return
+if(res.status!==200){alert(data && data.error ? data.error : 'Upload failed');return}
 clearForm()
 await waitForKV(data.id,true,pw)
 await loadList()
@@ -290,12 +298,12 @@ document.getElementById('uploadBtn').disabled=false
 async function openEdit(id){
 closeAllDropdowns()
 try{
-var pw=await openPw('Enter password to edit')
-var res=await apiFetch('/api/get/'+id,{method:'GET'},pw)
+editPw=await openPw('Enter password to edit')
+var res=await apiFetch('/api/get/'+id,{method:'GET'},editPw)
 var data=await res.json()
-if(res.status!==200) return
+if(res.status!==200){alert(data && data.error ? data.error : 'Failed to open');editPw=null;return}
 editingId=id
-var items=await fetchList(pw)
+var items=await fetchList()
 var item=null
 for(var i=0;i<items.length;i++){
 if(items[i].id===id){item=items[i];break}
@@ -303,28 +311,36 @@ if(items[i].id===id){item=items[i];break}
 document.getElementById('editName').value=item&&item.name?item.name:'Unnamed'
 document.getElementById('editCode').value=data.code||''
 document.getElementById('editModal').classList.add('show')
-}catch(e){}
+}catch(e){
+editPw=null
+}
 }
 
 function closeEdit(){
 document.getElementById('editModal').classList.remove('show')
 editingId=null
+editPw=null
 }
 
 async function saveEdit(){
-if(!editingId) return
+if(!editingId||!editPw) return
 var name=document.getElementById('editName').value.trim()
 var code=document.getElementById('editCode').value.trim()
 if(!name||!code) return
 try{
-var pw=await openPw('Enter password to save edit')
-var res=await apiFetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name:name,code:code})},pw)
-if(res.status!==200) return
+document.getElementById('saveBtn').disabled=true
+var res=await apiFetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name:name,code:code})},editPw)
+var data=null
+try{data=await res.json()}catch(e){}
+if(res.status!==200){alert(data && data.error ? data.error : 'Save failed');return}
 var id=editingId
 closeEdit()
-await waitForKV(id,true,pw)
+await waitForKV(id,true,editPw)
 await loadList()
-}catch(e){}
+}catch(e){
+}finally{
+document.getElementById('saveBtn').disabled=false
+}
 }
 
 function openDelete(id){
@@ -341,14 +357,20 @@ deleteId=null
 async function confirmDelete(){
 if(!deleteId) return
 try{
+document.getElementById('deleteBtn').disabled=true
 var pw=await openPw('Enter password to delete')
 var res=await apiFetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})},pw)
-if(res.status!==200) return
+var data=null
+try{data=await res.json()}catch(e){}
+if(res.status!==200){alert(data && data.error ? data.error : 'Delete failed');return}
 var id=deleteId
 closeConfirm()
 await waitForKV(id,false,pw)
 await loadList()
-}catch(e){}
+}catch(e){
+}finally{
+document.getElementById('deleteBtn').disabled=false
+}
 }
 
 function copyLoadstring(id,event){
@@ -356,9 +378,21 @@ event.preventDefault()
 navigator.clipboard.writeText('loadstring(game:HttpGet("'+location.origin+'/raw/'+id+'"))()')
 }
 
-function viewRaw(id,event){
+async function viewRaw(id,event){
 event.preventDefault()
-window.open('/raw/'+id,'_blank')
+try{
+var pw=await openPw('Enter password to view raw')
+var res=await apiFetch('/raw/'+id,{method:'GET'},pw)
+if(res.status!==200){alert('Wrong password');return}
+var t=await res.text()
+var w=window.open('about:blank','_blank')
+if(!w) return
+w.document.open()
+w.document.write('<pre style="white-space:pre-wrap;word-break:break-word;background:#0b0b0b;color:#fff;padding:16px;margin:0;font-family:monospace">'+
+t.replace(/[&<>"]/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])})+
+'</pre>')
+w.document.close()
+}catch(e){}
 }
 
 loadList()
@@ -368,8 +402,8 @@ loadList()
 }
 
 export async function onRequestGet(context){
-const pass=context.env.ADMIN_PASSWORD||''
-const provided=context.request.headers.get('X-Password')||''
+const pass=(context.env.ADMIN_PASSWORD||'').trim()
+const provided=(context.request.headers.get('X-Password')||'').trim()
 if(!pass) return new Response('Server not configured',{status:500,headers:{'Cache-Control':'no-store'}})
 if(provided!==pass) return new Response(loginHtml(),{status:401,headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store'}})
 return new Response(appHtml(),{status:200,headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store'}})
