@@ -87,8 +87,9 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <script>
 let editingId=null
 let deleteId=null
-let localCache=[]
-let codeCache={}
+let localCache=new Map()
+let codeCache=new Map()
+let lastSyncTime=0
 
 async function upload(){
 const name=document.getElementById('name').value.trim()
@@ -99,13 +100,14 @@ try{
 const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
-localCache.unshift({id:data.id,name,date:Date.now()})
-codeCache[data.id]=code
+const newItem={id:data.id,name,date:Date.now()}
+localCache.set(data.id,newItem)
+codeCache.set(data.id,code)
 renderList()
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 document.getElementById('customId').value=''
-loadListBackground()
+setTimeout(()=>syncWithKV(),2000)
 }catch(e){
 alert('❌ Upload failed: '+e.message)
 }
@@ -130,16 +132,16 @@ dropdown.classList.toggle('show')
 async function openEdit(id,event){
 event.stopPropagation()
 try{
-let code=codeCache[id]
+let code=codeCache.get(id)
 if(!code){
 const res=await fetch('/api/get/'+id,{cache:'no-store'})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 code=data.code
-codeCache[id]=code
+codeCache.set(id,code)
 }
 editingId=id
-const item=localCache.find(i=>i.id===id)
+const item=localCache.get(id)
 document.getElementById('editName').value=item?.name||'Unnamed'
 document.getElementById('editCode').value=code||''
 document.getElementById('editModal').classList.add('show')
@@ -162,15 +164,16 @@ try{
 const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
-const item=localCache.find(i=>i.id===editingId)
+const item=localCache.get(editingId)
 if(item){
 item.name=name
 item.date=Date.now()
+localCache.set(editingId,item)
 }
-codeCache[editingId]=code
+codeCache.set(editingId,code)
 renderList()
 closeEdit()
-loadListBackground()
+setTimeout(()=>syncWithKV(),2000)
 }catch(e){
 alert('❌ Edit failed: '+e.message)
 }
@@ -193,11 +196,11 @@ try{
 const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
-localCache=localCache.filter(i=>i.id!==deleteId)
-delete codeCache[deleteId]
+localCache.delete(deleteId)
+codeCache.delete(deleteId)
 renderList()
 closeConfirm()
-loadListBackground()
+setTimeout(()=>syncWithKV(),2000)
 }catch(e){
 alert('❌ Delete failed: '+e.message)
 }
@@ -214,11 +217,12 @@ document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 }
 
 function renderList(){
-if(!Array.isArray(localCache)||localCache.length===0){
+if(localCache.size===0){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
 return
 }
-document.getElementById('list').innerHTML=localCache.map(s=>`
+const items=Array.from(localCache.values()).sort((a,b)=>b.date-a.date)
+document.getElementById('list').innerHTML=items.map(s=>`
 <div class="item">
 <div class="item-header">
 <h3>${escapeHtml(s.name)}</h3>
@@ -237,12 +241,24 @@ document.getElementById('list').innerHTML=localCache.map(s=>`
 `).join('')
 }
 
-async function loadListBackground(){
+async function syncWithKV(){
 try{
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
+const now=Date.now()
+if(now-lastSyncTime<1000)return
+lastSyncTime=now
+const res=await fetch('/api/list?t='+now,{cache:'no-store'})
 const items=await res.json()
 if(Array.isArray(items)){
-localCache=items
+const newCache=new Map()
+items.forEach(item=>{
+const existing=localCache.get(item.id)
+if(existing){
+newCache.set(item.id,existing)
+}else{
+newCache.set(item.id,item)
+}
+})
+localCache=newCache
 renderList()
 }
 }catch(e){}
@@ -252,8 +268,8 @@ async function loadList(){
 try{
 const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
 const items=await res.json()
-if(Array.isArray(items)){
-localCache=items
+if(Array.isArray(items)&&items.length>0){
+localCache=new Map(items.map(i=>[i.id,i]))
 renderList()
 }else{
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
@@ -272,7 +288,7 @@ return div.innerHTML
 document.addEventListener('click',()=>closeAllDropdowns())
 
 loadList()
-setInterval(loadListBackground,10000)
+setInterval(syncWithKV,10000)
 </script>
 </body>
 </html>
