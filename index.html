@@ -9,7 +9,7 @@
 body{font-family:'Segoe UI',monospace;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;padding:40px 20px;min-height:100vh}
 .container{max-width:900px;margin:0 auto}
 h1{margin-bottom:30px;font-size:36px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
-.session-bar{background:rgba(0,102,255,0.2);padding:10px 20px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:13px;color:#00ccff;border:1px solid rgba(0,102,255,0.3)}
+.security-bar{background:rgba(255,51,51,0.2);padding:12px 20px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:13px;color:#ff6666;border:1px solid rgba(255,51,51,0.3);font-weight:bold}
 .upload-box{background:rgba(42,42,42,0.6);padding:25px;border-radius:12px;margin-bottom:40px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 input,textarea{width:100%;padding:14px;margin:12px 0;background:rgba(20,20,20,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:monospace;font-size:14px;border-radius:8px;transition:0.3s}
 input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.3)}
@@ -37,7 +37,7 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 .links{display:flex;gap:15px;margin-top:12px}
 .links a{font-size:13px;color:#0066ff;text-decoration:none;transition:0.2s;cursor:pointer}
 .links a:hover{color:#00ccff;text-shadow:0 0 10px rgba(0,204,255,0.5)}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center}
 .modal.show{display:flex}
 .modal-content{background:#1a1a1a;padding:30px;border-radius:12px;max-width:600px;width:90%;border:1px solid #333;box-shadow:0 10px 50px rgba(0,0,0,0.8)}
 .modal h2{margin-bottom:20px;color:#00ccff}
@@ -48,12 +48,16 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 .loading{text-align:center;padding:20px;color:#0066ff;font-size:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid #333;border-top-color:#0066ff;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px}
+.password-modal .modal-content{max-width:450px;border:2px solid #ff3333}
+.password-modal h2{color:#ff3333}
+.password-modal input{border-color:#ff3333}
+.password-modal input:focus{border-color:#ff6666;box-shadow:0 0 20px rgba(255,51,51,0.3)}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="session-bar">
-🔒 Authenticated • Session expires in <span id="timer">3:00</span>
+<div class="security-bar">
+🔐 MAXIMUM SECURITY MODE • Password required for every action
 </div>
 <h1>✨ Script Paste</h1>
 <div class="upload-box">
@@ -67,6 +71,18 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 </div>
 </div>
 <div class="list" id="list"></div>
+</div>
+
+<div class="modal password-modal" id="passwordModal">
+<div class="modal-content">
+<h2>🔒 Security Check</h2>
+<p style="color:#ccc;margin-bottom:20px">Enter password to continue</p>
+<input type="password" id="modalPw" placeholder="Password" autofocus onkeypress="if(event.key==='Enter')submitPassword()">
+<div class="modal-buttons">
+<button onclick="submitPassword()">✔️ Verify</button>
+<button class="clear" onclick="closePasswordModal()">✖️ Cancel</button>
+</div>
+</div>
 </div>
 
 <div class="modal" id="editModal">
@@ -97,34 +113,34 @@ let editingId=null
 let deleteId=null
 let codeCache={}
 let isLoading=false
-let sessionStart=Date.now()
-let sessionDuration=180000
+let currentPassword=''
+let pendingAction=null
 
-function updateTimer(){
-const elapsed=Date.now()-sessionStart
-const remaining=Math.max(0,sessionDuration-elapsed)
-const minutes=Math.floor(remaining/60000)
-const seconds=Math.floor((remaining%60000)/1000)
-document.getElementById('timer').textContent=minutes+':'+(seconds<10?'0':'')+seconds
-if(remaining<=0){
-location.reload()
-}
+function requestPassword(action){
+pendingAction=action
+document.getElementById('modalPw').value=''
+document.getElementById('passwordModal').classList.add('show')
+setTimeout(()=>document.getElementById('modalPw').focus(),100)
 }
 
-setInterval(updateTimer,1000)
-
-async function checkSession(){
-try{
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
-if(res.status===401){
-location.reload()
+function submitPassword(){
+const pw=document.getElementById('modalPw').value
+if(pw!=='Luna-132'){
+alert('❌ Wrong password!')
+return
 }
-}catch(e){
-location.reload()
+currentPassword=pw
+closePasswordModal()
+if(pendingAction){
+pendingAction()
+pendingAction=null
 }
 }
 
-setInterval(checkSession,30000)
+function closePasswordModal(){
+document.getElementById('passwordModal').classList.remove('show')
+pendingAction=null
+}
 
 async function upload(){
 if(isLoading)return
@@ -132,12 +148,16 @@ const name=document.getElementById('name').value.trim()
 const code=document.getElementById('code').value.trim()
 const customId=document.getElementById('customId').value.trim()
 if(!name||!code)return
+if(!currentPassword){
+requestPassword(upload)
+return
+}
 isLoading=true
 document.getElementById('uploadBtn').disabled=true
 document.getElementById('uploadBtn').textContent='⏳ Uploading...'
 try{
-const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
-if(res.status===401){location.reload();return}
+const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({name,code,customId})})
+if(res.status===401){alert('❌ Unauthorized');currentPassword='';return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 document.getElementById('name').value=''
@@ -169,13 +189,22 @@ if(d.id!=='menu-'+id)d.classList.remove('show')
 dropdown.classList.toggle('show')
 }
 
-async function openEdit(id,event){
+async function openEditWithPassword(id,event){
 event.stopPropagation()
+closeAllDropdowns()
+if(!currentPassword){
+requestPassword(()=>openEditActual(id))
+return
+}
+openEditActual(id)
+}
+
+async function openEditActual(id){
 try{
 let code=codeCache[id]
 if(!code){
-const res=await fetch('/api/get/'+id,{cache:'no-store'})
-if(res.status===401){location.reload();return}
+const res=await fetch('/api/get/'+id,{cache:'no-store',headers:{'X-Password':currentPassword}})
+if(res.status===401){alert('❌ Unauthorized');currentPassword='';return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 code=data.code
@@ -187,7 +216,6 @@ const item=items.find(i=>i.id===id)
 document.getElementById('editName').value=item?.name||'Unnamed'
 document.getElementById('editCode').value=code||''
 document.getElementById('editModal').classList.add('show')
-closeAllDropdowns()
 }catch(e){
 alert('❌ Failed to load script: '+e.message)
 }
@@ -203,8 +231,8 @@ const name=document.getElementById('editName').value.trim()
 const code=document.getElementById('editCode').value.trim()
 if(!name||!code)return
 try{
-const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
-if(res.status===401){location.reload();return}
+const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({id:editingId,name,code})})
+if(res.status===401){alert('❌ Unauthorized');currentPassword='';closeEdit();return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 codeCache[editingId]=code
@@ -229,12 +257,20 @@ deleteId=null
 
 async function confirmDelete(){
 if(isLoading)return
+if(!currentPassword){
+closeConfirm()
+requestPassword(()=>{
+document.getElementById('confirmModal').classList.add('show')
+confirmDelete()
+})
+return
+}
 isLoading=true
 document.getElementById('deleteBtn').disabled=true
 document.getElementById('deleteBtn').textContent='⏳ Löschen...'
 try{
-const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
-if(res.status===401){location.reload();return}
+const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({id:deleteId})})
+if(res.status===401){alert('❌ Unauthorized');currentPassword='';closeConfirm();return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 delete codeCache[deleteId]
@@ -255,13 +291,23 @@ const loadstr=`loadstring(game:HttpGet("${location.origin}/raw/${id}"))()`
 navigator.clipboard.writeText(loadstr)
 }
 
+function viewRaw(id,event){
+event.preventDefault()
+if(!currentPassword){
+requestPassword(()=>window.open(`/raw/${id}?pw=Luna-132`,'_blank'))
+return
+}
+window.open(`/raw/${id}?pw=Luna-132`,'_blank')
+}
+
 function closeAllDropdowns(){
 document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 }
 
 async function fetchList(){
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}})
-if(res.status===401){location.reload();return[]}
+if(!currentPassword)return[]
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache','X-Password':currentPassword}})
+if(res.status===401){currentPassword='';return[]}
 return await res.json()
 }
 
@@ -295,13 +341,13 @@ document.getElementById('list').innerHTML=items.map(s=>`
 <h3>${escapeHtml(s.name)}</h3>
 <button class="menu-btn" onclick="toggleMenu('${s.id}',event)">⋮</button>
 <div class="dropdown" id="menu-${s.id}">
-<button onclick="openEdit('${s.id}',event)">✏️ Edit</button>
+<button onclick="openEditWithPassword('${s.id}',event)">✏️ Edit</button>
 <button class="delete" onclick="openDeleteConfirm('${s.id}',event)">🗑️ Delete</button>
 </div>
 </div>
 <div class="date">📅 ${new Date(s.date).toLocaleString('de-DE')} • ID: ${escapeHtml(s.id)}</div>
 <div class="links">
-<a href="/raw/${s.id}?pw=Luna-132" target="_blank">👁️ View Raw</a>
+<a onclick="viewRaw('${s.id}',event)">👁️ View Raw</a>
 <a onclick="copyLoadstring('${s.id}',event)">📋 Copy Loadstring</a>
 </div>
 </div>
@@ -319,7 +365,15 @@ return div.innerHTML
 
 document.addEventListener('click',()=>closeAllDropdowns())
 
+const urlParams=new URLSearchParams(window.location.search)
+const urlPassword=urlParams.get('pw')
+if(urlPassword==='Luna-132'){
+currentPassword=urlPassword
 loadList()
+}else{
+requestPassword(loadList)
+}
+
 setInterval(loadList,15000)
 </script>
 </body>
