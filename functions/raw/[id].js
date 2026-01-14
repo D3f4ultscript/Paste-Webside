@@ -1,8 +1,18 @@
-function ok(req,env){
-return (req.headers.get('X-Password')||'')===(env.ADMIN_PASSWORD||'')
+function okAction(req,env){
+return (req.headers.get('X-Action-Password')||'')===(env.ACTION_PASSWORD||'')
 }
 
-function rawLoginHtml(){
+function looksLikeBrowser(req){
+const accept=(req.headers.get('Accept')||'').toLowerCase()
+const sfm=req.headers.get('Sec-Fetch-Mode')||''
+const sfd=req.headers.get('Sec-Fetch-Dest')||''
+if(accept.includes('text/html')) return true
+if(sfm==='navigate') return true
+if(sfd==='document') return true
+return false
+}
+
+function loginHtml(){
 return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +35,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0b0b0b;border:1px sol
 <body>
 <div class="box">
 <h1>Access required</h1>
-<p>Enter password to view this raw script.</p>
+<p>Enter action password to view this script.</p>
 <input id="pw" type="password" placeholder="Password" autocomplete="off" autofocus onkeypress="if(event.key==='Enter')go()">
 <button onclick="go()">Unlock</button>
 <div class="err" id="err">Wrong password.</div>
@@ -35,7 +45,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0b0b0b;border:1px sol
 async function go(){
 var pw=document.getElementById('pw').value
 if(!pw) return
-var res=await fetch(location.pathname,{headers:{'X-Password':pw,'Cache-Control':'no-store'}})
+var res=await fetch(location.pathname,{headers:{'X-Action-Password':pw,'Cache-Control':'no-store'}})
 if(res.status!==200){document.getElementById('err').style.display='block';return}
 var t=await res.text()
 document.getElementById('err').style.display='none'
@@ -54,11 +64,15 @@ const id=context.params.id
 const code=await context.env.PASTE_DB.get(id,'text')
 if(!code) return new Response('Not found',{status:404,headers:{'Cache-Control':'no-store'}})
 
-if(ok(context.request,context.env)){
+if(okAction(context.request,context.env)){
 return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'}})
 }
 
-return new Response(rawLoginHtml(),{status:401,headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store'}})
+if(looksLikeBrowser(context.request)){
+return new Response(loginHtml(),{status:401,headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store'}})
+}
+
+return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'}})
 }catch(e){
 return new Response('Error',{status:500,headers:{'Cache-Control':'no-store'}})
 }
