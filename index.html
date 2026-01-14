@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Script Paste</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:monospace;background:#1a1a1a;color:#fff;padding:20px}
+.container{max-width:800px;margin:0 auto}
+h1{margin-bottom:20px;font-size:24px}
+input,textarea{width:100%;padding:10px;margin:10px 0;background:#2a2a2a;border:1px solid #444;color:#fff;font-family:monospace;font-size:14px}
+textarea{min-height:300px;resize:vertical}
+button{padding:10px 20px;background:#0066ff;color:#fff;border:none;cursor:pointer;font-size:14px;margin:5px 5px 5px 0}
+button:hover{background:#0052cc}
+.list{margin-top:30px}
+.item{background:#2a2a2a;padding:15px;margin:10px 0;border-left:3px solid #0066ff}
+.item h3{font-size:16px;margin-bottom:8px}
+.links{display:flex;gap:10px;margin-top:8px}
+.links a{font-size:12px;color:#0066ff;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Script Paste</h1>
+<input type="text" id="name" placeholder="Script Name">
+<textarea id="code" placeholder="Script Code"></textarea>
+<button onclick="upload()">Upload</button>
+<button onclick="clear()">Clear</button>
+<div class="list" id="list"></div>
+</div>
+<script>
+async function upload(){
+const name=document.getElementById('name').value.trim()
+const code=document.getElementById('code').value.trim()
+if(!name||!code){alert('Name und Code erforderlich');return}
+const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code})})
+const data=await res.json()
+alert('Uploaded! Raw: '+data.raw)
+document.getElementById('name').value=''
+document.getElementById('code').value=''
+loadList()
+}
+function clear(){
+document.getElementById('name').value=''
+document.getElementById('code').value=''
+}
+async function loadList(){
+const res=await fetch('/api/list')
+const items=await res.json()
+document.getElementById('list').innerHTML=items.map(s=>`
+<div class="item">
+<h3>${s.name}</h3>
+<div style="font-size:12px;color:#888;margin:5px 0">${new Date(s.date).toLocaleString('de-DE')}</div>
+<div class="links">
+<a href="/raw/${s.id}" target="_blank">Raw Link</a>
+</div>
+</div>
+`).join('')
+}
+loadList()
+</script>
+</body>
+</html>
