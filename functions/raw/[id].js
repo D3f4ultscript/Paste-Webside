@@ -1,11 +1,11 @@
 export async function onRequestGet(context){
 try{
 const id=context.params.id
-const code=await context.env.PASTE_DB.get(id)
+const code=await context.env.PASTE_DB.get(id,'text')
 if(!code)return new Response('Not found',{status:404})
 
 const userAgent=context.request.headers.get('User-Agent')||''
-const isRoblox=userAgent.includes('Roblox')||userAgent.includes('roblox')
+const isRoblox=userAgent.toLowerCase().includes('roblox')
 
 if(!isRoblox){
 const url=new URL(context.request.url)
@@ -41,7 +41,7 @@ function submit(){location.href='?pw='+document.getElementById('pw').value}
 }
 }
 
-return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*'}})
+return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'}})
 }catch(e){
 return new Response('Error: '+e.message,{status:500})
 }
