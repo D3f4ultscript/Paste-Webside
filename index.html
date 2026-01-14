@@ -8,169 +8,158 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',monospace;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;padding:40px 20px;min-height:100vh}
 .container{max-width:900px;margin:0 auto}
-h1{margin-bottom:30px;font-size:36px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
-.security-bar{background:rgba(255,51,51,0.2);padding:12px 20px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:13px;color:#ff6666;border:1px solid rgba(255,51,51,0.3);font-weight:bold}
-.upload-box{background:rgba(42,42,42,0.6);padding:25px;border-radius:12px;margin-bottom:40px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
-input,textarea{width:100%;padding:14px;margin:12px 0;background:rgba(20,20,20,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:monospace;font-size:14px;border-radius:8px;transition:0.3s}
-input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.3)}
+h1{margin-bottom:22px;font-size:34px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.panel{background:rgba(42,42,42,0.6);padding:22px;border-radius:12px;margin-bottom:28px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+input,textarea{width:100%;padding:14px;margin:10px 0;background:rgba(20,20,20,0.85);border:1px solid rgba(255,255,255,0.12);color:#fff;font-family:monospace;font-size:14px;border-radius:10px;transition:0.2s}
+input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.25)}
 textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
-.btn-group{display:flex;gap:10px}
-button{padding:12px 24px;background:linear-gradient(135deg,#0066ff,#0052cc);color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:8px;font-weight:600;transition:0.3s;flex:1}
-button:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,102,255,0.4)}
-button:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-button.clear{background:linear-gradient(135deg,#333,#222)}
-button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
-.list{margin-top:20px}
-.item{background:rgba(42,42,42,0.6);padding:20px;margin:15px 0;border-left:4px solid #0066ff;border-radius:8px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);position:relative;transition:0.3s}
-.item:hover{transform:translateX(5px);box-shadow:0 5px 25px rgba(0,102,255,0.2)}
-.item h3{font-size:18px;margin-bottom:10px;color:#00ccff}
-.item-header{display:flex;justify-content:space-between;align-items:center}
-.menu-btn{background:none;border:none;color:#888;font-size:24px;cursor:pointer;padding:5px 10px;width:auto;flex:none;position:relative;transition:0.2s}
-.menu-btn:hover{color:#fff;transform:none;background:rgba(255,255,255,0.1);border-radius:4px}
-.dropdown{display:none;position:absolute;right:10px;top:40px;background:#2a2a2a;border:1px solid #444;border-radius:8px;overflow:hidden;z-index:100;min-width:140px;box-shadow:0 8px 30px rgba(0,0,0,0.7)}
+.row{display:flex;gap:10px}
+.btn{padding:12px 18px;background:linear-gradient(135deg,#0066ff,#0052cc);color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:10px;font-weight:700;transition:0.2s;flex:1}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,102,255,0.35)}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.gray{background:linear-gradient(135deg,#333,#222)}
+.list{margin-top:10px}
+.item{background:rgba(42,42,42,0.55);padding:18px;margin:12px 0;border-left:4px solid #0066ff;border-radius:10px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);position:relative}
+.item-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item h3{font-size:17px;color:#00ccff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
+.small{font-size:12px;color:#9a9a9a;margin-top:6px}
+.menu-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#bbb;font-size:18px;cursor:pointer;padding:6px 10px;border-radius:8px}
+.menu-btn:hover{color:#fff}
+.dropdown{display:none;position:absolute;right:18px;top:52px;background:#222;border:1px solid #333;border-radius:10px;overflow:hidden;z-index:50;min-width:140px;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
 .dropdown.show{display:block}
-.dropdown button{background:none;border:none;color:#fff;padding:14px 20px;width:100%;text-align:left;font-size:14px;border-radius:0;flex:none;transition:0.2s;display:flex;align-items:center;gap:10px}
-.dropdown button:hover{background:#0066ff;transform:none;box-shadow:none}
-.dropdown button.delete{color:#ff6666}
+.dropdown button{width:100%;text-align:left;background:none;border:none;color:#fff;padding:12px 14px;cursor:pointer;font-size:13px}
+.dropdown button:hover{background:#0066ff}
+.dropdown button.delete{color:#ff8080}
 .dropdown button.delete:hover{background:#ff3333;color:#fff}
-.date{font-size:12px;color:#888;margin:8px 0}
-.links{display:flex;gap:15px;margin-top:12px}
-.links a{font-size:13px;color:#0066ff;text-decoration:none;transition:0.2s;cursor:pointer}
-.links a:hover{color:#00ccff;text-shadow:0 0 10px rgba(0,204,255,0.5)}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center}
+.links{display:flex;gap:14px;margin-top:10px}
+.links a{font-size:13px;color:#4aa3ff;text-decoration:none;cursor:pointer}
+.links a:hover{color:#7fd5ff}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;align-items:center;justify-content:center}
 .modal.show{display:flex}
-.modal-content{background:#1a1a1a;padding:30px;border-radius:12px;max-width:600px;width:90%;border:1px solid #333;box-shadow:0 10px 50px rgba(0,0,0,0.8)}
-.modal h2{margin-bottom:20px;color:#00ccff}
-.modal-buttons{display:flex;gap:10px;margin-top:20px}
-.confirm-modal .modal-content{max-width:400px;text-align:center}
-.confirm-modal p{margin:20px 0;font-size:16px;color:#ccc}
-.hint{font-size:12px;color:#888;margin:-8px 0 12px 0}
-.loading{text-align:center;padding:20px;color:#0066ff;font-size:14px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid #333;border-top-color:#0066ff;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px}
-.password-modal .modal-content{max-width:450px;border:2px solid #ff3333}
-.password-modal h2{color:#ff3333}
-.password-modal input{border-color:#ff3333}
-.password-modal input:focus{border-color:#ff6666;box-shadow:0 0 20px rgba(255,51,51,0.3)}
+.modal-box{width:min(560px,92vw);background:#151515;border:1px solid #333;border-radius:12px;padding:22px;box-shadow:0 15px 60px rgba(0,0,0,0.75)}
+.modal-box h2{font-size:18px;margin-bottom:12px;color:#00ccff}
+.modal-actions{display:flex;gap:10px;margin-top:12px}
+.modal-actions .btn{flex:1}
+.loading{padding:18px;text-align:center;color:#7fd5ff}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="security-bar">
-🔐 MAXIMUM SECURITY MODE • Password required for every action
-</div>
-<h1>✨ Script Paste</h1>
-<div class="upload-box">
+<h1>Script Paste</h1>
+
+<div class="panel">
 <input type="text" id="name" placeholder="Script Name">
 <textarea id="code" placeholder="Paste your script here..."></textarea>
-<input type="text" id="customId" placeholder="Custom ID (optional - leave empty for random)">
-<div class="hint">💡 Custom ID erlaubt: a-z, A-Z, 0-9, _, -</div>
-<div class="btn-group">
-<button id="uploadBtn" onclick="upload()">📤 Upload</button>
-<button class="clear" onclick="clearForm()">🗑️ Clear</button>
+<input type="text" id="customId" placeholder="Custom ID (optional: banana)">
+<div class="row">
+<button class="btn" id="uploadBtn" onclick="upload()">Upload</button>
+<button class="btn gray" onclick="clearForm()">Clear</button>
 </div>
 </div>
+
 <div class="list" id="list"></div>
 </div>
 
-<div class="modal password-modal" id="passwordModal">
-<div class="modal-content">
-<h2>🔒 Security Check</h2>
-<p style="color:#ccc;margin-bottom:20px">Enter password to continue</p>
-<input type="password" id="modalPw" placeholder="Password" autofocus onkeypress="if(event.key==='Enter')submitPassword()">
-<div class="modal-buttons">
-<button onclick="submitPassword()">✔️ Verify</button>
-<button class="clear" onclick="closePasswordModal()">✖️ Cancel</button>
+<div class="modal" id="pwModal">
+<div class="modal-box">
+<h2 id="pwTitle">Password</h2>
+<input type="password" id="pwInput" placeholder="Enter password" autocomplete="off" onkeypress="if(event.key==='Enter')pwSubmit()">
+<div class="modal-actions">
+<button class="btn" onclick="pwSubmit()">OK</button>
+<button class="btn gray" onclick="pwCancel()">Cancel</button>
 </div>
 </div>
 </div>
 
 <div class="modal" id="editModal">
-<div class="modal-content">
-<h2>Edit Script</h2>
+<div class="modal-box">
+<h2>Edit</h2>
 <input type="text" id="editName" placeholder="Script Name">
-<textarea id="editCode" placeholder="Script Code" style="min-height:300px"></textarea>
-<div class="modal-buttons">
-<button onclick="saveEdit()">💾 Save</button>
-<button class="clear" onclick="closeEdit()">✖️ Cancel</button>
+<textarea id="editCode" placeholder="Script Code" style="min-height:280px"></textarea>
+<div class="modal-actions">
+<button class="btn" onclick="saveEdit()">Save</button>
+<button class="btn gray" onclick="closeEdit()">Cancel</button>
 </div>
 </div>
 </div>
 
-<div class="modal confirm-modal" id="confirmModal">
-<div class="modal-content">
-<h2>❌ Delete Script</h2>
-<p>Willst du dieses Script wirklich löschen?</p>
-<div class="modal-buttons">
-<button class="clear" id="deleteBtn" onclick="confirmDelete()">🗑️ Löschen</button>
-<button onclick="closeConfirm()">✖️ Abbrechen</button>
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+<h2>Delete</h2>
+<div style="color:#cfcfcf;margin-top:8px">Really delete this script?</div>
+<div class="modal-actions">
+<button class="btn gray" onclick="closeConfirm()">Cancel</button>
+<button class="btn" style="background:linear-gradient(135deg,#ff3333,#c20000)" id="deleteBtn" onclick="confirmDelete()">Delete</button>
 </div>
 </div>
 </div>
 
 <script>
+const PASS='Luna-132'
+
+let sessionPw=''
+let pwResolve=null
+let pwReject=null
+
 let editingId=null
 let deleteId=null
 let codeCache={}
-let isLoading=false
-let currentPassword=''
-let pendingAction=null
+let busy=false
 
-function requestPassword(action){
-pendingAction=action
-document.getElementById('modalPw').value=''
-document.getElementById('passwordModal').classList.add('show')
-setTimeout(()=>document.getElementById('modalPw').focus(),100)
+function esc(s){
+const d=document.createElement('div')
+d.textContent=s==null?'':String(s)
+return d.innerHTML
 }
 
-function submitPassword(){
-const pw=document.getElementById('modalPw').value
-if(pw!=='Luna-132'){
-alert('❌ Wrong password!')
-return
-}
-currentPassword=pw
-closePasswordModal()
-if(pendingAction){
-pendingAction()
-pendingAction=null
-}
+function closeAllDropdowns(){
+document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 }
 
-function closePasswordModal(){
-document.getElementById('passwordModal').classList.remove('show')
-pendingAction=null
+document.addEventListener('click',()=>closeAllDropdowns())
+
+function openPw(title){
+document.getElementById('pwTitle').textContent=title||'Password'
+document.getElementById('pwInput').value=''
+document.getElementById('pwModal').classList.add('show')
+setTimeout(()=>document.getElementById('pwInput').focus(),50)
+return new Promise((resolve,reject)=>{
+pwResolve=resolve
+pwReject=reject
+})
 }
 
-async function upload(){
-if(isLoading)return
-const name=document.getElementById('name').value.trim()
-const code=document.getElementById('code').value.trim()
-const customId=document.getElementById('customId').value.trim()
-if(!name||!code)return
-if(!currentPassword){
-requestPassword(upload)
-return
+function pwSubmit(){
+const v=document.getElementById('pwInput').value
+if(v!==PASS) return
+document.getElementById('pwModal').classList.remove('show')
+const r=pwResolve
+pwResolve=pwReject=null
+r(v)
 }
-isLoading=true
-document.getElementById('uploadBtn').disabled=true
-document.getElementById('uploadBtn').textContent='⏳ Uploading...'
-try{
-const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({name,code,customId})})
-if(res.status===401){alert('❌ Unauthorized');currentPassword='';return}
-const data=await res.json()
-if(data.error){alert('❌ Error: '+data.error);return}
-document.getElementById('name').value=''
-document.getElementById('code').value=''
-document.getElementById('customId').value=''
-await waitForKV(data.id,true)
-}catch(e){
-alert('❌ Upload failed: '+e.message)
-}finally{
-isLoading=false
-document.getElementById('uploadBtn').disabled=false
-document.getElementById('uploadBtn').textContent='📤 Upload'
+
+function pwCancel(){
+document.getElementById('pwModal').classList.remove('show')
+const r=pwReject
+pwResolve=pwReject=null
+if(r) r(new Error('cancel'))
 }
+
+async function ensureSessionPassword(){
+const pw=await openPw('Enter password to open this page')
+sessionPw=pw
+}
+
+async function askActionPassword(title){
+return await openPw(title||'Enter password')
+}
+
+async function apiFetch(path,opts,pw){
+const o=opts||{}
+o.headers=o.headers||{}
+o.headers['X-Password']=pw
+o.cache='no-store'
+return await fetch(path,o)
 }
 
 function clearForm(){
@@ -181,44 +170,99 @@ document.getElementById('customId').value=''
 
 function toggleMenu(id,event){
 event.stopPropagation()
-const dropdown=document.getElementById('menu-'+id)
-const allDropdowns=document.querySelectorAll('.dropdown')
-allDropdowns.forEach(d=>{
-if(d.id!=='menu-'+id)d.classList.remove('show')
-})
-dropdown.classList.toggle('show')
+const dd=document.getElementById('menu-'+id)
+document.querySelectorAll('.dropdown').forEach(x=>{ if(x!==dd) x.classList.remove('show') })
+dd.classList.toggle('show')
 }
 
-async function openEditWithPassword(id,event){
-event.stopPropagation()
-closeAllDropdowns()
-if(!currentPassword){
-requestPassword(()=>openEditActual(id))
+async function fetchList(){
+const res=await apiFetch('/api/list?t='+Date.now(),{method:'GET'},sessionPw)
+if(res.status===401) throw new Error('unauthorized')
+return await res.json()
+}
+
+async function loadList(){
+try{
+document.getElementById('list').innerHTML='<div class="loading">Loading...</div>'
+const items=await fetchList()
+if(!Array.isArray(items)||items.length===0){
+document.getElementById('list').innerHTML='<div class="loading" style="color:#9a9a9a">No scripts</div>'
 return
 }
-openEditActual(id)
+document.getElementById('list').innerHTML=items.map(s=>`
+<div class="item">
+<div class="item-header">
+<h3>${esc(s.name)}</h3>
+<button class="menu-btn" onclick="toggleMenu('${s.id}',event)">⋮</button>
+<div class="dropdown" id="menu-${s.id}">
+<button onclick="openEdit('${s.id}')">Edit</button>
+<button class="delete" onclick="openDelete('${s.id}')">Delete</button>
+</div>
+</div>
+<div class="small">${new Date(s.date||0).toLocaleString('de-DE')} • ID: ${esc(s.id)}</div>
+<div class="links">
+<a onclick="viewRaw('${s.id}',event)">View raw</a>
+<a onclick="copyLoadstring('${s.id}',event)">Copy loadstring</a>
+</div>
+</div>
+`).join('')
+}catch(e){
+document.getElementById('list').innerHTML='<div class="loading" style="color:#ff6666">Failed to load</div>'
+}
 }
 
-async function openEditActual(id){
+async function waitForKV(id,shouldExist){
+const max=15
+for(let i=0;i<max;i++){
+await new Promise(r=>setTimeout(r,1000))
 try{
-let code=codeCache[id]
-if(!code){
-const res=await fetch('/api/get/'+id,{cache:'no-store',headers:{'X-Password':currentPassword}})
-if(res.status===401){alert('❌ Unauthorized');currentPassword='';return}
-const data=await res.json()
-if(data.error){alert('❌ Error: '+data.error);return}
-code=data.code
-codeCache[id]=code
-}
-editingId=id
 const items=await fetchList()
-const item=items.find(i=>i.id===id)
-document.getElementById('editName').value=item?.name||'Unnamed'
-document.getElementById('editCode').value=code||''
-document.getElementById('editModal').classList.add('show')
-}catch(e){
-alert('❌ Failed to load script: '+e.message)
+const ex=items.some(x=>x.id===id)
+if(shouldExist && ex) return true
+if(!shouldExist && !ex) return true
+}catch(e){}
 }
+return false
+}
+
+async function upload(){
+if(busy) return
+const name=document.getElementById('name').value.trim()
+const code=document.getElementById('code').value.trim()
+const customId=document.getElementById('customId').value.trim()
+if(!name||!code) return
+try{
+busy=true
+document.getElementById('uploadBtn').disabled=true
+const pw=await askActionPassword('Enter password to upload')
+const res=await apiFetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})},pw)
+const data=await res.json()
+if(res.status!==200){busy=false;document.getElementById('uploadBtn').disabled=false;return}
+clearForm()
+await waitForKV(data.id,true)
+await loadList()
+}finally{
+busy=false
+document.getElementById('uploadBtn').disabled=false
+}
+}
+
+async function openEdit(id){
+closeAllDropdowns()
+try{
+const pw=await askActionPassword('Enter password to edit')
+const res=await apiFetch('/api/get/'+id,{method:'GET'},pw)
+const data=await res.json()
+if(res.status!==200) return
+editingId=id
+document.getElementById('editName').value=''
+document.getElementById('editCode').value=data.code||''
+document.getElementById('editModal').classList.add('show')
+
+const items=await fetchList()
+const item=items.find(x=>x.id===id)
+document.getElementById('editName').value=item?.name||'Unnamed'
+} catch(e){}
 }
 
 function closeEdit(){
@@ -227,27 +271,24 @@ editingId=null
 }
 
 async function saveEdit(){
+if(!editingId) return
 const name=document.getElementById('editName').value.trim()
 const code=document.getElementById('editCode').value.trim()
-if(!name||!code)return
+if(!name||!code) return
 try{
-const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({id:editingId,name,code})})
-if(res.status===401){alert('❌ Unauthorized');currentPassword='';closeEdit();return}
-const data=await res.json()
-if(data.error){alert('❌ Error: '+data.error);return}
-codeCache[editingId]=code
+const pw=await askActionPassword('Enter password to save edit')
+const res=await apiFetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})},pw)
+if(res.status!==200) return
 closeEdit()
 await waitForKV(editingId,true)
-}catch(e){
-alert('❌ Edit failed: '+e.message)
-}
+await loadList()
+} catch(e){}
 }
 
-function openDeleteConfirm(id,event){
-event.stopPropagation()
+function openDelete(id){
+closeAllDropdowns()
 deleteId=id
 document.getElementById('confirmModal').classList.add('show')
-closeAllDropdowns()
 }
 
 function closeConfirm(){
@@ -256,125 +297,46 @@ deleteId=null
 }
 
 async function confirmDelete(){
-if(isLoading)return
-if(!currentPassword){
-closeConfirm()
-requestPassword(()=>{
-document.getElementById('confirmModal').classList.add('show')
-confirmDelete()
-})
-return
-}
-isLoading=true
-document.getElementById('deleteBtn').disabled=true
-document.getElementById('deleteBtn').textContent='⏳ Löschen...'
+if(!deleteId) return
 try{
-const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Password':currentPassword},body:JSON.stringify({id:deleteId})})
-if(res.status===401){alert('❌ Unauthorized');currentPassword='';closeConfirm();return}
-const data=await res.json()
-if(data.error){alert('❌ Error: '+data.error);return}
-delete codeCache[deleteId]
+const pw=await askActionPassword('Enter password to delete')
+const res=await apiFetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})},pw)
+if(res.status!==200) return
+const id=deleteId
 closeConfirm()
-await waitForKV(deleteId,false)
-}catch(e){
-alert('❌ Delete failed: '+e.message)
-}finally{
-isLoading=false
-document.getElementById('deleteBtn').disabled=false
-document.getElementById('deleteBtn').textContent='🗑️ Löschen'
-}
+await waitForKV(id,false)
+await loadList()
+} catch(e){}
 }
 
 function copyLoadstring(id,event){
 event.preventDefault()
-const loadstr=`loadstring(game:HttpGet("${location.origin}/raw/${id}"))()`
-navigator.clipboard.writeText(loadstr)
+navigator.clipboard.writeText(`loadstring(game:HttpGet("${location.origin}/raw/${id}"))()`)
 }
 
-function viewRaw(id,event){
+async function viewRaw(id,event){
 event.preventDefault()
-if(!currentPassword){
-requestPassword(()=>window.open(`/raw/${id}?pw=Luna-132`,'_blank'))
-return
-}
-window.open(`/raw/${id}?pw=Luna-132`,'_blank')
-}
-
-function closeAllDropdowns(){
-document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
-}
-
-async function fetchList(){
-if(!currentPassword)return[]
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache','X-Password':currentPassword}})
-if(res.status===401){currentPassword='';return[]}
-return await res.json()
-}
-
-async function waitForKV(id,shouldExist){
-const maxAttempts=15
-const delay=1000
-document.getElementById('list').innerHTML='<div class="loading"><span class="spinner"></span>Updating...</div>'
-for(let i=0;i<maxAttempts;i++){
-await new Promise(r=>setTimeout(r,delay))
 try{
-const items=await fetchList()
-const exists=items.some(item=>item.id===id)
-if(shouldExist&&exists){await loadList();return}
-if(!shouldExist&&!exists){await loadList();return}
-}catch(e){}
+const pw=await askActionPassword('Enter password to view raw')
+const res=await apiFetch('/raw/'+id,{method:'GET'},pw)
+if(res.status!==200) return
+const t=await res.text()
+const w=window.open('about:blank','_blank')
+if(!w) return
+w.document.open()
+w.document.write('<pre style="white-space:pre-wrap;word-break:break-word;background:#0b0b0b;color:#fff;padding:16px;margin:0;font-family:monospace">'+
+t.replace(/[&<>"]/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]))+
+'</pre>')
+w.document.close()
+} catch(e){}
 }
+
+history.replaceState(null,'',location.pathname)
+
+;(async()=>{
+await ensureSessionPassword()
 await loadList()
-}
-
-async function loadList(){
-try{
-const items=await fetchList()
-if(!Array.isArray(items)||items.length===0){
-document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
-return
-}
-items.sort((a,b)=>b.date-a.date)
-document.getElementById('list').innerHTML=items.map(s=>`
-<div class="item">
-<div class="item-header">
-<h3>${escapeHtml(s.name)}</h3>
-<button class="menu-btn" onclick="toggleMenu('${s.id}',event)">⋮</button>
-<div class="dropdown" id="menu-${s.id}">
-<button onclick="openEditWithPassword('${s.id}',event)">✏️ Edit</button>
-<button class="delete" onclick="openDeleteConfirm('${s.id}',event)">🗑️ Delete</button>
-</div>
-</div>
-<div class="date">📅 ${new Date(s.date).toLocaleString('de-DE')} • ID: ${escapeHtml(s.id)}</div>
-<div class="links">
-<a onclick="viewRaw('${s.id}',event)">👁️ View Raw</a>
-<a onclick="copyLoadstring('${s.id}',event)">📋 Copy Loadstring</a>
-</div>
-</div>
-`).join('')
-}catch(e){
-document.getElementById('list').innerHTML='<div style="text-align:center;color:#ff3333;padding:40px">❌ Fehler beim Laden</div>'
-}
-}
-
-function escapeHtml(text){
-const div=document.createElement('div')
-div.textContent=text
-return div.innerHTML
-}
-
-document.addEventListener('click',()=>closeAllDropdowns())
-
-const urlParams=new URLSearchParams(window.location.search)
-const urlPassword=urlParams.get('pw')
-if(urlPassword==='Luna-132'){
-currentPassword=urlPassword
-loadList()
-}else{
-requestPassword(loadList)
-}
-
-setInterval(loadList,15000)
+})()
 </script>
 </body>
 </html>
