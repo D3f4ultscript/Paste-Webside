@@ -42,6 +42,7 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 .modal-buttons{display:flex;gap:10px;margin-top:20px}
 .confirm-modal .modal-content{max-width:400px;text-align:center}
 .confirm-modal p{margin:20px 0;font-size:16px;color:#ccc}
+.hint{font-size:12px;color:#888;margin:-8px 0 12px 0}
 </style>
 </head>
 <body>
@@ -50,6 +51,8 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <div class="upload-box">
 <input type="text" id="name" placeholder="Script Name">
 <textarea id="code" placeholder="Paste your script here..."></textarea>
+<input type="text" id="customId" placeholder="Custom ID (optional - leave empty for random)">
+<div class="hint">💡 Custom ID erlaubt: a-z, A-Z, 0-9, _, -</div>
 <div class="btn-group">
 <button onclick="upload()">📤 Upload</button>
 <button class="clear" onclick="clearForm()">🗑️ Clear</button>
@@ -88,22 +91,26 @@ let deleteId=null
 async function upload(){
 const name=document.getElementById('name').value.trim()
 const code=document.getElementById('code').value.trim()
+const customId=document.getElementById('customId').value.trim()
 if(!name||!code)return
 try{
-const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code})})
+const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
 const data=await res.json()
-if(data.error){alert('Error: '+data.error);return}
+if(data.error){alert('❌ Error: '+data.error);return}
 document.getElementById('name').value=''
 document.getElementById('code').value=''
+document.getElementById('customId').value=''
+await new Promise(r=>setTimeout(r,500))
 await loadList()
 }catch(e){
-alert('Upload failed: '+e.message)
+alert('❌ Upload failed: '+e.message)
 }
 }
 
 function clearForm(){
 document.getElementById('name').value=''
 document.getElementById('code').value=''
+document.getElementById('customId').value=''
 }
 
 function toggleMenu(id,event){
@@ -119,11 +126,11 @@ dropdown.classList.toggle('show')
 async function openEdit(id,event){
 event.stopPropagation()
 try{
-const res=await fetch('/api/get/'+id)
+const res=await fetch('/api/get/'+id,{cache:'no-store'})
 const data=await res.json()
-if(data.error){alert('Error: '+data.error);return}
+if(data.error){alert('❌ Error: '+data.error);return}
 editingId=id
-const listRes=await fetch('/api/list')
+const listRes=await fetch('/api/list',{cache:'no-store'})
 const items=await listRes.json()
 const item=items.find(i=>i.id===id)
 document.getElementById('editName').value=item?.name||'Unnamed'
@@ -131,7 +138,7 @@ document.getElementById('editCode').value=data.code||''
 document.getElementById('editModal').classList.add('show')
 closeAllDropdowns()
 }catch(e){
-alert('Failed to load script: '+e.message)
+alert('❌ Failed to load script: '+e.message)
 }
 }
 
@@ -147,11 +154,12 @@ if(!name||!code)return
 try{
 const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
 const data=await res.json()
-if(data.error){alert('Error: '+data.error);return}
+if(data.error){alert('❌ Error: '+data.error);return}
 closeEdit()
+await new Promise(r=>setTimeout(r,500))
 await loadList()
 }catch(e){
-alert('Edit failed: '+e.message)
+alert('❌ Edit failed: '+e.message)
 }
 }
 
@@ -171,11 +179,12 @@ async function confirmDelete(){
 try{
 const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
 const data=await res.json()
-if(data.error){alert('Error: '+data.error);return}
+if(data.error){alert('❌ Error: '+data.error);return}
 closeConfirm()
+await new Promise(r=>setTimeout(r,800))
 await loadList()
 }catch(e){
-alert('Delete failed: '+e.message)
+alert('❌ Delete failed: '+e.message)
 }
 }
 
@@ -191,7 +200,7 @@ document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 
 async function loadList(){
 try{
-const res=await fetch('/api/list')
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}})
 const items=await res.json()
 if(!Array.isArray(items)||items.length===0){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
@@ -207,7 +216,7 @@ document.getElementById('list').innerHTML=items.map(s=>`
 <button class="delete" onclick="openDeleteConfirm('${s.id}',event)">🗑️ Delete</button>
 </div>
 </div>
-<div class="date">📅 ${new Date(s.date).toLocaleString('de-DE')}</div>
+<div class="date">📅 ${new Date(s.date).toLocaleString('de-DE')} • ID: ${escapeHtml(s.id)}</div>
 <div class="links">
 <a href="/raw/${s.id}?pw=Luna-132" target="_blank">👁️ View Raw</a>
 <a onclick="copyLoadstring('${s.id}',event)">📋 Copy Loadstring</a>
@@ -215,7 +224,7 @@ document.getElementById('list').innerHTML=items.map(s=>`
 </div>
 `).join('')
 }catch(e){
-document.getElementById('list').innerHTML='<div style="text-align:center;color:#ff3333;padding:40px">Fehler beim Laden</div>'
+document.getElementById('list').innerHTML='<div style="text-align:center;color:#ff3333;padding:40px">❌ Fehler beim Laden</div>'
 }
 }
 
@@ -228,6 +237,7 @@ return div.innerHTML
 document.addEventListener('click',()=>closeAllDropdowns())
 
 loadList()
+setInterval(loadList,5000)
 </script>
 </body>
 </html>
