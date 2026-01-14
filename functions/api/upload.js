@@ -17,7 +17,7 @@ if(!name||!code) return new Response(JSON.stringify({error:'Missing fields'}),{s
 let id=sanitizeId(customId)
 if(id){
 const exists=await context.env.PASTE_DB.get(id)
-if(exists) return new Response(JSON.stringify({error:'ID exists'}),{status:409,headers:{'Content-Type':'application/json'}})
+if(exists) return new Response(JSON.stringify({error:'ID already exists'}),{status:409,headers:{'Content-Type':'application/json'}})
 }else{
 id=Date.now().toString(36)+Math.random().toString(36).slice(2,11)
 }
