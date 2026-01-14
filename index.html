@@ -9,6 +9,7 @@
 body{font-family:'Segoe UI',monospace;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;padding:40px 20px;min-height:100vh}
 .container{max-width:900px;margin:0 auto}
 h1{margin-bottom:30px;font-size:36px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.session-bar{background:rgba(0,102,255,0.2);padding:10px 20px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:13px;color:#00ccff;border:1px solid rgba(0,102,255,0.3)}
 .upload-box{background:rgba(42,42,42,0.6);padding:25px;border-radius:12px;margin-bottom:40px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 input,textarea{width:100%;padding:14px;margin:12px 0;background:rgba(20,20,20,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:monospace;font-size:14px;border-radius:8px;transition:0.3s}
 input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.3)}
@@ -51,6 +52,9 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 </head>
 <body>
 <div class="container">
+<div class="session-bar">
+🔒 Authenticated • Session expires in <span id="timer">3:00</span>
+</div>
 <h1>✨ Script Paste</h1>
 <div class="upload-box">
 <input type="text" id="name" placeholder="Script Name">
@@ -93,6 +97,34 @@ let editingId=null
 let deleteId=null
 let codeCache={}
 let isLoading=false
+let sessionStart=Date.now()
+let sessionDuration=180000
+
+function updateTimer(){
+const elapsed=Date.now()-sessionStart
+const remaining=Math.max(0,sessionDuration-elapsed)
+const minutes=Math.floor(remaining/60000)
+const seconds=Math.floor((remaining%60000)/1000)
+document.getElementById('timer').textContent=minutes+':'+(seconds<10?'0':'')+seconds
+if(remaining<=0){
+location.reload()
+}
+}
+
+setInterval(updateTimer,1000)
+
+async function checkSession(){
+try{
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
+if(res.status===401){
+location.reload()
+}
+}catch(e){
+location.reload()
+}
+}
+
+setInterval(checkSession,30000)
 
 async function upload(){
 if(isLoading)return
@@ -105,11 +137,9 @@ document.getElementById('uploadBtn').disabled=true
 document.getElementById('uploadBtn').textContent='⏳ Uploading...'
 try{
 const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
+if(res.status===401){location.reload();return}
 const data=await res.json()
-if(data.error){
-alert('❌ Error: '+data.error)
-return
-}
+if(data.error){alert('❌ Error: '+data.error);return}
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 document.getElementById('customId').value=''
@@ -145,6 +175,7 @@ try{
 let code=codeCache[id]
 if(!code){
 const res=await fetch('/api/get/'+id,{cache:'no-store'})
+if(res.status===401){location.reload();return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 code=data.code
@@ -173,6 +204,7 @@ const code=document.getElementById('editCode').value.trim()
 if(!name||!code)return
 try{
 const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
+if(res.status===401){location.reload();return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 codeCache[editingId]=code
@@ -202,6 +234,7 @@ document.getElementById('deleteBtn').disabled=true
 document.getElementById('deleteBtn').textContent='⏳ Löschen...'
 try{
 const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
+if(res.status===401){location.reload();return}
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
 delete codeCache[deleteId]
@@ -228,6 +261,7 @@ document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 
 async function fetchList(){
 const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}})
+if(res.status===401){location.reload();return[]}
 return await res.json()
 }
 
@@ -240,14 +274,8 @@ await new Promise(r=>setTimeout(r,delay))
 try{
 const items=await fetchList()
 const exists=items.some(item=>item.id===id)
-if(shouldExist&&exists){
-await loadList()
-return
-}
-if(!shouldExist&&!exists){
-await loadList()
-return
-}
+if(shouldExist&&exists){await loadList();return}
+if(!shouldExist&&!exists){await loadList();return}
 }catch(e){}
 }
 await loadList()
