@@ -1,5 +1,8 @@
-function okAction(req,env){
-return (req.headers.get('X-Action-Password')||'')===(env.ACTION_PASSWORD||'')
+function okPassword(req,env){
+const pass=(env.SITE_PASSWORD||'').trim()
+const provided=(req.headers.get('X-Password')||'').trim()
+if(!pass) return false
+return provided===pass
 }
 
 function looksLikeBrowser(req){
@@ -35,7 +38,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0b0b0b;border:1px sol
 <body>
 <div class="box">
 <h1>Access required</h1>
-<p>Enter action password to view this script.</p>
+<p>Enter password to view this script.</p>
 <input id="pw" type="password" placeholder="Password" autocomplete="off" autofocus onkeypress="if(event.key==='Enter')go()">
 <button onclick="go()">Unlock</button>
 <div class="err" id="err">Wrong password.</div>
@@ -45,7 +48,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#0b0b0b;border:1px sol
 async function go(){
 var pw=document.getElementById('pw').value
 if(!pw) return
-var res=await fetch(location.pathname,{headers:{'X-Action-Password':pw,'Cache-Control':'no-store'}})
+var res=await fetch(location.pathname,{headers:{'X-Password':pw,'Cache-Control':'no-store'}})
 if(res.status!==200){document.getElementById('err').style.display='block';return}
 var t=await res.text()
 document.getElementById('err').style.display='none'
@@ -64,7 +67,7 @@ const id=context.params.id
 const code=await context.env.PASTE_DB.get(id,'text')
 if(!code) return new Response('Not found',{status:404,headers:{'Cache-Control':'no-store'}})
 
-if(okAction(context.request,context.env)){
+if(okPassword(context.request,context.env)){
 return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'}})
 }
 

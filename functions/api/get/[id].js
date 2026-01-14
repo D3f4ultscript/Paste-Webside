@@ -1,9 +1,12 @@
-function okAction(req,env){
-return (req.headers.get('X-Action-Password')||'')===(env.ACTION_PASSWORD||'')
+function okPassword(req,env){
+const pass=(env.SITE_PASSWORD||'').trim()
+const provided=(req.headers.get('X-Password')||'').trim()
+if(!pass) return false
+return provided===pass
 }
 
 export async function onRequestGet(context){
-if(!okAction(context.request,context.env)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
+if(!okPassword(context.request,context.env)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
 try{
 const id=context.params.id
 const code=await context.env.PASTE_DB.get(id,'text')
