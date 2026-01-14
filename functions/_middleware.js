@@ -7,36 +7,28 @@ if(url.pathname.startsWith('/raw/')&&isRoblox){
 return context.next()
 }
 
-const cookies=context.request.headers.get('Cookie')||''
-const authMatch=cookies.match(/auth=([^;]+)/)
-const authValue=authMatch?authMatch[1]:null
 const password=url.searchParams.get('pw')
 
 if(url.pathname==='/'){
-if(password==='Luna-132'){
-const response=await context.next()
-const newResponse=new Response(response.body,response)
-newResponse.headers.set('Set-Cookie','auth=Luna-132; Path=/; Max-Age=180; SameSite=Strict; HttpOnly')
-return newResponse
-}
-if(authValue==='Luna-132'){
-return context.next()
-}
+if(password!=='Luna-132'){
 return new Response(getLoginPage(),{headers:{'Content-Type':'text/html'},status:401})
+}
+return context.next()
 }
 
 if(url.pathname.startsWith('/api/')){
-if(authValue!=='Luna-132'){
+const authHeader=context.request.headers.get('X-Password')||''
+if(authHeader!=='Luna-132'){
 return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json'}})
 }
 return context.next()
 }
 
 if(url.pathname.startsWith('/raw/')){
-if(password==='Luna-132'){
-return context.next()
-}
+if(password!=='Luna-132'){
 return new Response(getRawLoginPage(),{headers:{'Content-Type':'text/html'},status:401})
+}
+return context.next()
 }
 
 return context.next()
@@ -55,22 +47,23 @@ body{font-family:monospace;background:#0a0a0a;color:#fff;display:flex;align-item
 .box{background:#1a1a1a;padding:50px;border:3px solid #0066ff;border-radius:12px;text-align:center;max-width:500px;box-shadow:0 0 50px rgba(0,102,255,0.4);animation:fadeIn 0.3s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 h1{color:#00ccff;margin-bottom:30px;font-size:32px;text-shadow:0 0 15px rgba(0,204,255,0.5)}
-.logo{font-size:64px;margin-bottom:20px}
+.logo{font-size:64px;margin-bottom:20px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 input{width:100%;padding:16px;margin:25px 0;background:#0a0a0a;border:2px solid #0066ff;color:#fff;font-family:monospace;border-radius:8px;font-size:16px;transition:0.3s}
 input:focus{outline:none;border-color:#00ccff;box-shadow:0 0 20px rgba(0,204,255,0.3)}
 button{width:100%;padding:16px;background:linear-gradient(135deg,#0066ff,#00ccff);color:#fff;border:none;cursor:pointer;font-family:monospace;border-radius:8px;font-size:16px;font-weight:bold;transition:0.3s}
 button:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,102,255,0.6)}
-.info{color:#666;font-size:13px;margin-top:20px}
+.info{color:#ff3333;font-size:13px;margin-top:20px;font-weight:bold}
 </style>
 </head>
 <body>
 <div class="box">
-<div class="logo">🔒</div>
+<div class="logo">🔐</div>
 <h1>Script Paste</h1>
-<p style="color:#888;margin-bottom:20px">Enter password to access</p>
+<p style="color:#888;margin-bottom:20px">Maximum Security Mode</p>
 <input type="password" id="pw" placeholder="Password" autofocus onkeypress="if(event.key==='Enter')submit()">
 <button onclick="submit()">Unlock</button>
-<div class="info">⏰ Session expires after 3 minutes</div>
+<div class="info">⚠️ Password required on every access</div>
 </div>
 <script>
 function submit(){
