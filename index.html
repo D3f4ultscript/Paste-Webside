@@ -6,58 +6,149 @@
 <title>Script Paste</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:monospace;background:#1a1a1a;color:#fff;padding:20px}
-.container{max-width:800px;margin:0 auto}
-h1{margin-bottom:20px;font-size:24px}
-input,textarea{width:100%;padding:10px;margin:10px 0;background:#2a2a2a;border:1px solid #444;color:#fff;font-family:monospace;font-size:14px}
-textarea{min-height:300px;resize:vertical}
-button{padding:10px 20px;background:#0066ff;color:#fff;border:none;cursor:pointer;font-size:14px;margin:5px 5px 5px 0}
-button:hover{background:#0052cc}
-.list{margin-top:30px}
-.item{background:#2a2a2a;padding:15px;margin:10px 0;border-left:3px solid #0066ff}
-.item h3{font-size:16px;margin-bottom:8px}
-.links{display:flex;gap:10px;margin-top:8px}
-.links a{font-size:12px;color:#0066ff;text-decoration:none}
+body{font-family:'Segoe UI',monospace;background:linear-gradient(135deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;padding:40px 20px;min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+h1{margin-bottom:30px;font-size:36px;background:linear-gradient(45deg,#0066ff,#00ccff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.upload-box{background:rgba(42,42,42,0.6);padding:25px;border-radius:12px;margin-bottom:40px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+input,textarea{width:100%;padding:14px;margin:12px 0;background:rgba(20,20,20,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:monospace;font-size:14px;border-radius:8px;transition:0.3s}
+input:focus,textarea:focus{outline:none;border-color:#0066ff;box-shadow:0 0 15px rgba(0,102,255,0.3)}
+textarea{min-height:200px;resize:vertical;font-size:13px;line-height:1.5}
+.btn-group{display:flex;gap:10px}
+button{padding:12px 24px;background:linear-gradient(135deg,#0066ff,#0052cc);color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:8px;font-weight:600;transition:0.3s;flex:1}
+button:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(0,102,255,0.4)}
+button.clear{background:linear-gradient(135deg,#333,#222)}
+button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
+.list{margin-top:20px}
+.item{background:rgba(42,42,42,0.6);padding:20px;margin:15px 0;border-left:4px solid #0066ff;border-radius:8px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);position:relative;transition:0.3s}
+.item:hover{transform:translateX(5px);box-shadow:0 5px 25px rgba(0,102,255,0.2)}
+.item h3{font-size:18px;margin-bottom:10px;color:#00ccff}
+.item-header{display:flex;justify-content:space-between;align-items:center}
+.menu-btn{background:none;border:none;color:#888;font-size:24px;cursor:pointer;padding:0 10px;width:auto;flex:none;position:relative}
+.menu-btn:hover{color:#fff;transform:none}
+.dropdown{display:none;position:absolute;right:0;top:35px;background:#1a1a1a;border:1px solid #333;border-radius:8px;overflow:hidden;z-index:100;min-width:120px;box-shadow:0 5px 25px rgba(0,0,0,0.5)}
+.dropdown.show{display:block}
+.dropdown button{background:none;border:none;color:#fff;padding:12px 20px;width:100%;text-align:left;font-size:13px;border-radius:0;flex:none;transition:0.2s}
+.dropdown button:hover{background:#0066ff;transform:none}
+.dropdown button.delete:hover{background:#ff3333}
+.date{font-size:12px;color:#888;margin:8px 0}
+.links{display:flex;gap:15px;margin-top:12px}
+.links a{font-size:13px;color:#0066ff;text-decoration:none;transition:0.2s}
+.links a:hover{color:#00ccff;text-shadow:0 0 10px rgba(0,204,255,0.5)}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:#1a1a1a;padding:30px;border-radius:12px;max-width:600px;width:90%;border:1px solid #333}
+.modal h2{margin-bottom:20px;color:#00ccff}
+.modal-buttons{display:flex;gap:10px;margin-top:20px}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>Script Paste</h1>
+<h1>✨ Script Paste</h1>
+<div class="upload-box">
 <input type="text" id="name" placeholder="Script Name">
-<textarea id="code" placeholder="Script Code"></textarea>
-<button onclick="upload()">Upload</button>
-<button onclick="clear()">Clear</button>
+<textarea id="code" placeholder="Paste your script here..."></textarea>
+<div class="btn-group">
+<button onclick="upload()">📤 Upload</button>
+<button class="clear" onclick="clear()">🗑️ Clear</button>
+</div>
+</div>
 <div class="list" id="list"></div>
 </div>
+
+<div class="modal" id="editModal">
+<div class="modal-content">
+<h2>Edit Script</h2>
+<input type="text" id="editName" placeholder="Script Name">
+<textarea id="editCode" placeholder="Script Code"></textarea>
+<div class="modal-buttons">
+<button onclick="saveEdit()">💾 Save</button>
+<button class="clear" onclick="closeEdit()">✖️ Cancel</button>
+</div>
+</div>
+</div>
+
 <script>
+let editingId=null
+
 async function upload(){
 const name=document.getElementById('name').value.trim()
 const code=document.getElementById('code').value.trim()
-if(!name||!code){alert('Name und Code erforderlich');return}
+if(!name||!code){alert('❌ Name und Code erforderlich');return}
 const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code})})
 const data=await res.json()
-alert('Uploaded! Raw: '+data.raw)
+alert('✅ Uploaded!\n\nLoadstring:\nloadstring(game:HttpGet("'+data.raw+'"))()')
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 loadList()
 }
+
 function clear(){
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 }
+
+function toggleMenu(id){
+document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
+const dropdown=document.getElementById('menu-'+id)
+if(dropdown)dropdown.classList.toggle('show')
+}
+
+function openEdit(id,name,code){
+editingId=id
+document.getElementById('editName').value=name
+document.getElementById('editCode').value=code
+document.getElementById('editModal').classList.add('show')
+document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
+}
+
+function closeEdit(){
+document.getElementById('editModal').classList.remove('show')
+editingId=null
+}
+
+async function saveEdit(){
+const name=document.getElementById('editName').value.trim()
+const code=document.getElementById('editCode').value.trim()
+if(!name||!code){alert('❌ Name und Code erforderlich');return}
+await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
+closeEdit()
+loadList()
+}
+
+async function deleteScript(id){
+if(!confirm('❌ Script wirklich löschen?'))return
+await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})})
+document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
+loadList()
+}
+
 async function loadList(){
 const res=await fetch('/api/list')
 const items=await res.json()
 document.getElementById('list').innerHTML=items.map(s=>`
 <div class="item">
+<div class="item-header">
 <h3>${s.name}</h3>
-<div style="font-size:12px;color:#888;margin:5px 0">${new Date(s.date).toLocaleString('de-DE')}</div>
+<button class="menu-btn" onclick="toggleMenu('${s.id}')">⋮
+<div class="dropdown" id="menu-${s.id}">
+<button onclick="openEdit('${s.id}','${s.name.replace(/'/g,"")}',\`${(s.code||'').replace(/`/g,'\\`')}\`)">✏️ Edit</button>
+<button class="delete" onclick="deleteScript('${s.id}')">🗑️ Delete</button>
+</div>
+</button>
+</div>
+<div class="date">📅 ${new Date(s.date).toLocaleString('de-DE')}</div>
 <div class="links">
-<a href="/raw/${s.id}" target="_blank">Raw Link</a>
+<a href="/raw/${s.id}?pw=Luna-132" target="_blank">👁️ View Raw</a>
+<a href="#" onclick="navigator.clipboard.writeText('loadstring(game:HttpGet(\\"${location.origin}/raw/${s.id}\\"))()');alert('✅ Loadstring kopiert');return false">📋 Copy Loadstring</a>
 </div>
 </div>
 `).join('')
 }
+
+document.addEventListener('click',e=>{
+if(!e.target.closest('.menu-btn'))document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
+})
+
 loadList()
 </script>
 </body>
