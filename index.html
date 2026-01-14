@@ -87,6 +87,8 @@ button.clear:hover{box-shadow:0 5px 20px rgba(50,50,50,0.4)}
 <script>
 let editingId=null
 let deleteId=null
+let localCache=[]
+let codeCache={}
 
 async function upload(){
 const name=document.getElementById('name').value.trim()
@@ -97,11 +99,13 @@ try{
 const res=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,customId})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
+localCache.unshift({id:data.id,name,date:Date.now()})
+codeCache[data.id]=code
+renderList()
 document.getElementById('name').value=''
 document.getElementById('code').value=''
 document.getElementById('customId').value=''
-await new Promise(r=>setTimeout(r,500))
-await loadList()
+loadListBackground()
 }catch(e){
 alert('❌ Upload failed: '+e.message)
 }
@@ -126,15 +130,18 @@ dropdown.classList.toggle('show')
 async function openEdit(id,event){
 event.stopPropagation()
 try{
+let code=codeCache[id]
+if(!code){
 const res=await fetch('/api/get/'+id,{cache:'no-store'})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
+code=data.code
+codeCache[id]=code
+}
 editingId=id
-const listRes=await fetch('/api/list',{cache:'no-store'})
-const items=await listRes.json()
-const item=items.find(i=>i.id===id)
+const item=localCache.find(i=>i.id===id)
 document.getElementById('editName').value=item?.name||'Unnamed'
-document.getElementById('editCode').value=data.code||''
+document.getElementById('editCode').value=code||''
 document.getElementById('editModal').classList.add('show')
 closeAllDropdowns()
 }catch(e){
@@ -155,9 +162,15 @@ try{
 const res=await fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:editingId,name,code})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
+const item=localCache.find(i=>i.id===editingId)
+if(item){
+item.name=name
+item.date=Date.now()
+}
+codeCache[editingId]=code
+renderList()
 closeEdit()
-await new Promise(r=>setTimeout(r,500))
-await loadList()
+loadListBackground()
 }catch(e){
 alert('❌ Edit failed: '+e.message)
 }
@@ -180,9 +193,11 @@ try{
 const res=await fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleteId})})
 const data=await res.json()
 if(data.error){alert('❌ Error: '+data.error);return}
+localCache=localCache.filter(i=>i.id!==deleteId)
+delete codeCache[deleteId]
+renderList()
 closeConfirm()
-await new Promise(r=>setTimeout(r,800))
-await loadList()
+loadListBackground()
 }catch(e){
 alert('❌ Delete failed: '+e.message)
 }
@@ -198,15 +213,12 @@ function closeAllDropdowns(){
 document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('show'))
 }
 
-async function loadList(){
-try{
-const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}})
-const items=await res.json()
-if(!Array.isArray(items)||items.length===0){
+function renderList(){
+if(!Array.isArray(localCache)||localCache.length===0){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
 return
 }
-document.getElementById('list').innerHTML=items.map(s=>`
+document.getElementById('list').innerHTML=localCache.map(s=>`
 <div class="item">
 <div class="item-header">
 <h3>${escapeHtml(s.name)}</h3>
@@ -223,6 +235,29 @@ document.getElementById('list').innerHTML=items.map(s=>`
 </div>
 </div>
 `).join('')
+}
+
+async function loadListBackground(){
+try{
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
+const items=await res.json()
+if(Array.isArray(items)){
+localCache=items
+renderList()
+}
+}catch(e){}
+}
+
+async function loadList(){
+try{
+const res=await fetch('/api/list?t='+Date.now(),{cache:'no-store'})
+const items=await res.json()
+if(Array.isArray(items)){
+localCache=items
+renderList()
+}else{
+document.getElementById('list').innerHTML='<div style="text-align:center;color:#666;padding:40px">Keine Scripts vorhanden</div>'
+}
 }catch(e){
 document.getElementById('list').innerHTML='<div style="text-align:center;color:#ff3333;padding:40px">❌ Fehler beim Laden</div>'
 }
@@ -237,7 +272,7 @@ return div.innerHTML
 document.addEventListener('click',()=>closeAllDropdowns())
 
 loadList()
-setInterval(loadList,5000)
+setInterval(loadListBackground,10000)
 </script>
 </body>
 </html>
