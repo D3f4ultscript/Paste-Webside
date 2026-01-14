@@ -7,7 +7,10 @@ if(!code)return new Response('Not found',{status:404})
 const userAgent=context.request.headers.get('User-Agent')||''
 const isRoblox=userAgent.toLowerCase().includes('roblox')
 
-if(!isRoblox){
+if(isRoblox){
+return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'}})
+}
+
 const url=new URL(context.request.url)
 const password=url.searchParams.get('pw')
 if(password!=='Luna-132'){
@@ -38,7 +41,6 @@ function submit(){location.href='?pw='+document.getElementById('pw').value}
 </script>
 </body>
 </html>`,{headers:{'Content-Type':'text/html'},status:403})
-}
 }
 
 return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-cache'}})
