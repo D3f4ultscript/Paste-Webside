@@ -1,11 +1,4 @@
-function ok(req,env){
-const pass=(env.SITE_PASSWORD||'').trim()
-const provided=(req.headers.get('X-Password')||'').trim()
-return pass&&provided===pass
-}
-
 export async function onRequestGet(context){
-if(!ok(context.request,context.env)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json'}})
 try{
 const id=context.params.id
 const code=await context.env.PASTE_DB.get(id,'text')

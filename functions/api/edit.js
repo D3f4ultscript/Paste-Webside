@@ -1,11 +1,4 @@
-function ok(req,env){
-const pass=(env.SITE_PASSWORD||'').trim()
-const provided=(req.headers.get('X-Password')||'').trim()
-return pass&&provided===pass
-}
-
 export async function onRequestPost(context){
-if(!ok(context.request,context.env)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json'}})
 try{
 const {id,name,code}=await context.request.json()
 if(!id||!name||!code) return new Response(JSON.stringify({error:'Missing fields'}),{status:400,headers:{'Content-Type':'application/json'}})
