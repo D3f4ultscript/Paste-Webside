@@ -1,6 +1,16 @@
-function isOperaGX(req){
+function isBrave(req){
 const ua=(req.headers.get('User-Agent')||'').toLowerCase()
-return ua.includes('opx')
+if(ua.includes('brave')) return true
+const secChUa=req.headers.get('Sec-CH-UA')||''
+if(secChUa.includes('brave')) return true
+return false
+}
+
+function isDesktop(req){
+const ua=(req.headers.get('User-Agent')||'').toLowerCase()
+if(ua.includes('mobile')||ua.includes('android')||ua.includes('iphone')||ua.includes('ipad')) return false
+if(ua.includes('windows')||ua.includes('macintosh')||ua.includes('linux')||ua.includes('x11')) return true
+return false
 }
 
 function parseBasicAuth(req){
@@ -28,7 +38,7 @@ export async function onRequest(context){
 const env=context.env
 const req=context.request
 
-if(!isOperaGX(req)){
+if(!isBrave(req)||!isDesktop(req)){
 return new Response(downHtml(),{status:503,headers:{'Content-Type':'text/html'}})
 }
 
