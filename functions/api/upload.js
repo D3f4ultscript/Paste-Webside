@@ -1,8 +1,18 @@
+function checkAuth(req,env){
+const validUser=(env.BASIC_USER||'').trim()
+const validPass=(env.BASIC_PASS||'').trim()
+const user=(req.headers.get('X-User')||'').trim()
+const pass=(req.headers.get('X-Pass')||'').trim()
+if(!validUser||!validPass) return false
+return user===validUser&&pass===validPass
+}
+
 function sanitizeId(s){
 return (s||'').trim().replace(/[^a-zA-Z0-9_-]/g,'')
 }
 
 export async function onRequestPost(context){
+if(!checkAuth(context.request,context.env)) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{'Content-Type':'application/json'}})
 try{
 const {name,code,customId}=await context.request.json()
 if(!name||!code) return new Response(JSON.stringify({error:'Missing fields'}),{status:400,headers:{'Content-Type':'application/json'}})
