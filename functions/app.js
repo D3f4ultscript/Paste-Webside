@@ -17,29 +17,10 @@ function loginHtml() {
       background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
       color: #e4e6eb;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       padding: 20px;
-    }
-    .discord-link {
-      margin-top: 20px;
-      color: #5865f2;
-      text-decoration: none;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 13px;
-      padding: 8px 16px;
-      background: rgba(88, 101, 242, 0.1);
-      border: 1px solid rgba(88, 101, 242, 0.2);
-      border-radius: 20px;
-      transition: all 0.3s ease;
-      letter-spacing: 0.5px;
-    }
-    .discord-link:hover {
-      background: rgba(88, 101, 242, 0.2);
-      border-color: #5865f2;
-      transform: translateY(-1px);
     }
     
     .login-container {
@@ -198,7 +179,6 @@ function loginHtml() {
     
     <div class="error-msg" id="errorMsg">Wrong credentials</div>
   </div>
-  <a href="https://discord.gg/5XH3pgW8ah" target="_blank" class="discord-link">discord.gg/5XH3pgW8ah</a>
   
   <script>
     async function handleLogin(event) {

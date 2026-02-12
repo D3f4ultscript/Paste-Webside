@@ -25,7 +25,6 @@ export async function onRequestGet(context) {
       background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
       color: #e4e6eb;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
@@ -39,7 +38,6 @@ export async function onRequestGet(context) {
       padding: 40px;
       max-width: 400px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      margin-bottom: 20px;
     }
     .error-icon {
       font-size: 48px;
@@ -52,27 +50,11 @@ export async function onRequestGet(context) {
       text-transform: uppercase;
       letter-spacing: 2px;
     }
-      p {
+    p {
       color: #8892b0;
       font-size: 14px;
       line-height: 1.6;
-    }
-    .discord-link {
-      color: #5865f2;
-      text-decoration: none;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 13px;
-      padding: 8px 16px;
-      background: rgba(88, 101, 242, 0.1);
-      border: 1px solid rgba(88, 101, 242, 0.2);
-      border-radius: 20px;
-      transition: all 0.3s ease;
-      letter-spacing: 0.5px;
-    }
-    .discord-link:hover {
-      background: rgba(88, 101, 242, 0.2);
-      border-color: #5865f2;
-      transform: translateY(-1px);
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -81,8 +63,10 @@ export async function onRequestGet(context) {
     <div class="error-icon">🛡️</div>
     <h1>Access Denied</h1>
     <p>This resource cannot be accessed directly from your current client.</p>
+      <div style="margin-top:20px;">
+        <a href="https://discord.gg/5XH3pgW8ah" target="_blank" style="color:#7289da;text-decoration:none;font-size:15px;">Join my Discord: https://discord.gg/5XH3pgW8ah</a>
+      </div>
   </div>
-  <a href="https://discord.gg/5XH3pgW8ah" target="_blank" class="discord-link">discord.gg/5XH3pgW8ah</a>
 </body>
 </html>`, { status: 403, headers: { 'Content-Type': 'text/html' } })
     }
