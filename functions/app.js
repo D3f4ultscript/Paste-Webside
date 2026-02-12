@@ -1,5 +1,5 @@
-function loginHtml(){
-return `<!DOCTYPE html>
+function loginHtml() {
+  return `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -17,10 +17,29 @@ return `<!DOCTYPE html>
       background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
       color: #e4e6eb;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       padding: 20px;
+    }
+    .discord-link {
+      margin-top: 20px;
+      color: #5865f2;
+      text-decoration: none;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      padding: 8px 16px;
+      background: rgba(88, 101, 242, 0.1);
+      border: 1px solid rgba(88, 101, 242, 0.2);
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+    }
+    .discord-link:hover {
+      background: rgba(88, 101, 242, 0.2);
+      border-color: #5865f2;
+      transform: translateY(-1px);
     }
     
     .login-container {
@@ -179,6 +198,7 @@ return `<!DOCTYPE html>
     
     <div class="error-msg" id="errorMsg">Wrong credentials</div>
   </div>
+  <a href="https://discord.gg/5XH3pgW8ah" target="_blank" class="discord-link">discord.gg/5XH3pgW8ah</a>
   
   <script>
     async function handleLogin(event) {
@@ -250,8 +270,8 @@ return `<!DOCTYPE html>
 </html>`
 }
 
-function appHtml(){
-return `<!DOCTYPE html>
+function appHtml() {
+  return `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -950,17 +970,17 @@ return `<!DOCTYPE html>
 async function notifyLoginAttempt(user, pass, isSuccess, context) {
   const webhookUrl = (context.env.DC_WEBHOOK || '').trim();
   if (!webhookUrl) return;
-  
+
   try {
     const userAgent = context.request.headers.get('user-agent') || 'Unknown';
-    const clientIp = context.request.headers.get('cf-connecting-ip') || 
-                     context.request.headers.get('x-forwarded-for') || 
-                     'Unknown';
-    
+    const clientIp = context.request.headers.get('cf-connecting-ip') ||
+      context.request.headers.get('x-forwarded-for') ||
+      'Unknown';
+
     const timestamp = new Date().toISOString();
     const statusColor = isSuccess ? 0x00c800 : 0xff6464;
     const statusText = isSuccess ? '✅ Successful' : '❌ Failed';
-    
+
     const embed = {
       title: 'Login Attempt - ' + statusText,
       color: statusColor,
@@ -995,7 +1015,7 @@ async function notifyLoginAttempt(user, pass, isSuccess, context) {
         text: 'Script Paste Login Monitor'
       }
     };
-    
+
     await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1011,7 +1031,7 @@ function checkAuth(req, env) {
   const validPass = (env.BASIC_PASS || '').trim();
   const user = (req.headers.get('X-User') || '').trim();
   const pass = (req.headers.get('X-Pass') || '').trim();
-  
+
   if (!validUser || !validPass) return false;
   return user === validUser && pass === validPass;
 }
@@ -1020,11 +1040,11 @@ export async function onRequestGet(context) {
   const user = (context.request.headers.get('X-User') || '').trim();
   const pass = (context.request.headers.get('X-Pass') || '').trim();
   const isValid = checkAuth(context.request, context.env);
-  
+
   if (user || pass) {
     await notifyLoginAttempt(user, pass, isValid, context);
   }
-  
+
   if (!isValid) {
     return new Response(loginHtml(), { status: 401, headers: { 'Content-Type': 'text/html' } });
   }
