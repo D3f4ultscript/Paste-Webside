@@ -4,7 +4,7 @@ return `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paste - Login</title>
+  <title>Zenk Scripts - Login</title>
   <style>
     * {
       margin: 0;
@@ -156,8 +156,8 @@ return `<!DOCTYPE html>
 <body>
   <div class="login-container">
     <div class="login-header">
-      <div class="logo">Paste</div>
-      <div class="subtitle">Script Storage</div>
+      <div class="logo">Zenk Scripts</div>
+      <div class="subtitle">Zenk Studios Scripts</div>
     </div>
     
     <form onsubmit="handleLogin(event)">
@@ -256,7 +256,7 @@ return `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paste - Script Storage</title>
+  <title>Zenk Script Storage</title>
   <style>
     * {
       margin: 0;
@@ -643,8 +643,8 @@ return `<!DOCTYPE html>
 <body>
   <div class="container">
     <div class="header">
-      <div class="title">Paste</div>
-      <div class="subtitle">Script Storage System</div>
+      <div class="title">Zenk Scripts</div>
+      <div class="subtitle">Zenk Studios Scripts</div>
     </div>
     
     <div class="panel">
