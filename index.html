@@ -1,9 +1,77 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Paste</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paste - Script Storage</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #e4e6eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .loading-screen {
+      text-align: center;
+      background: rgba(15, 18, 35, 0.95);
+      border: 1px solid rgba(0, 200, 255, 0.2);
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    .logo {
+      font-size: 32px;
+      font-weight: 600;
+      color: #00c8ff;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 200, 255, 0.2);
+      border-top: 3px solid #00c8ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    .loading-text {
+      color: #8892b0;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body></body>
+<body>
+  <div class="loading-screen">
+    <div class="logo">Paste</div>
+    <div class="spinner"></div>
+    <div class="loading-text">Redirecting...</div>
+  </div>
+  
+  <script>
+    window.location.href = '/app';
+  </script>
+</body>
 </html>

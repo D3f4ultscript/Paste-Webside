@@ -9,7 +9,63 @@ const isRoblox=userAgent.includes('roblox')
 
 if(!isRoblox){
 return new Response(`<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Access Denied</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}.box{width:min(420px,90vw);background:#111;border:1px solid #333;padding:28px;border-radius:10px;text-align:center}h1{font-size:20px;margin-bottom:12px;color:#ff6666}p{color:#999;font-size:13px;line-height:1.6}</style></head><body><div class="box"><h1>⛔ Access Denied</h1><p>This resource cannot be accessed directly.</p></div></body></html>`,{status:403,headers:{'Content-Type':'text/html'}})
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #e4e6eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .error-container {
+      text-align: center;
+      background: rgba(15, 18, 35, 0.95);
+      border: 2px solid rgba(255, 100, 100, 0.3);
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      color: #ff6464;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    p {
+      color: #8892b0;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-icon">🛡️</div>
+    <h1>Access Denied</h1>
+    <p>This resource cannot be accessed directly from your current client.</p>
+  </div>
+</body>
+</html>`,{status:403,headers:{'Content-Type':'text/html'}})
 }
 
 return new Response(code,{headers:{'Content-Type':'text/plain;charset=utf-8','Access-Control-Allow-Origin':'*'}})
